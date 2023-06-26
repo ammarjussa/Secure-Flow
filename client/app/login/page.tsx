@@ -1,10 +1,26 @@
 "use client";
 
-import React from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { signIn } from "@/firebase/firebaseAuth";
 
 const LoginPage: React.FC = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const router = useRouter();
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    const { result, error } = await signIn(email, password);
+    if (error) {
+      return console.log(error);
+    }
+    console.log(result);
+    return router.push("/");
+  };
+
   return (
     <div className="flex items-center justify-between min-h-[calc(100vh-110px)] bg-white">
       <div className="flex flex-col justify-center md:flex-row w-full max-w-md md:max-w-5xl">
@@ -16,10 +32,23 @@ const LoginPage: React.FC = () => {
             <div className="flex flex-col items-center">
               <h5>Login using social networks</h5>
               <div className="flex flex-row items-center">
-                <img
-                  alt="google"
-                  className="mt-2 w-10 h-10 cursor-pointer"
-                  src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
+                <Image
+                  src="/facebook.svg"
+                  width="50"
+                  height="50"
+                  alt="facebook icon"
+                />
+                <Image
+                  src="/google.svg"
+                  width="50"
+                  height="50"
+                  alt="google icon"
+                />
+                <Image
+                  src="/twitter.svg"
+                  width="50"
+                  height="50"
+                  alt="twitter icon"
                 />
               </div>
               <span className="mt-4">OR</span>
@@ -31,6 +60,7 @@ const LoginPage: React.FC = () => {
                   id="email"
                   type="email"
                   placeholder="Email address"
+                  onChange={(e: any) => setEmail(e.target.value)}
                 />
               </div>
               <div className="mb-4">
@@ -39,12 +69,14 @@ const LoginPage: React.FC = () => {
                   id="password"
                   type="password"
                   placeholder="Password"
+                  onChange={(e: any) => setPassword(e.target.value)}
                 />
               </div>
 
               <button
                 className="bg-blue-500 mt-4 hover:bg-blue-700 text-white font-bold py-2 px-10 rounded-3xl focus:outline-none focus:shadow-outline"
                 type="button"
+                onClick={handleSubmit}
               >
                 Sign In
               </button>
