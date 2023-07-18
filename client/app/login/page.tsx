@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "@/firebase/firebaseAuth";
+import { signInWithEmailAndPassword, getAuth } from "firebase/auth";
+import firebase_app from "@/firebase/firebase";
+
+const auth = getAuth(firebase_app);
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -13,14 +16,13 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    if (email && password) {
-      const { result, error } = await signIn(email, password);
-      if (error) {
-        alert("No user found");
-        return console.log(error);
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      if (result) {
+        router.push("/");
       }
-      console.log(result);
-      return router.push("/");
+    } catch (err) {
+      console.log(err);
     }
   };
 

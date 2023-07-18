@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import { AuthContextProvider } from "@/context/AuthContext";
 
 export default function LoginLayout({
   children,
@@ -9,7 +10,9 @@ export default function LoginLayout({
     <html lang="en">
       <body>
         <Header />
-        <main>{children}</main>
+        <main>
+          <AuthContextProvider>{children}</AuthContextProvider>
+        </main>
       </body>
     </html>
   );

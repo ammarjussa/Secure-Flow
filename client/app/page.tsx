@@ -4,15 +4,29 @@ import { useEffect } from "react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { getAuth, signOut } from "firebase/auth";
+import { db } from "@/firebase/firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 const DashboardPage: React.FC<{}> = () => {
   const { user }: any = useAuthContext();
+
   const router = useRouter();
   const auth = getAuth();
 
   useEffect(() => {
     if (user === null) router.push("/login");
   }, [user]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const querySnapshot = await getDocs(collection(db, "participants"));
+      querySnapshot.forEach((doc) => {
+        console.log(doc.id, " => ", doc.data());
+      });
+    };
+
+    fetchData();
+  });
 
   const handleLogOut = async (e: any) => {
     e.preventDefault();
