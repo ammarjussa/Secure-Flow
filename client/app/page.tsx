@@ -1,7 +1,5 @@
 "use client";
 
-// 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
-
 import { useEffect } from "react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
