@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { signIn } from "@/firebase/firebaseAuth";
 
 const LoginPage: React.FC = () => {
@@ -13,12 +12,16 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    const { result, error } = await signIn(email, password);
-    if (error) {
-      return console.log(error);
+
+    if (email && password) {
+      const { result, error } = await signIn(email, password);
+      if (error) {
+        alert("No user found");
+        return console.log(error);
+      }
+      console.log(result);
+      return router.push("/");
     }
-    console.log(result);
-    return router.push("/");
   };
 
   return (
@@ -29,30 +32,7 @@ const LoginPage: React.FC = () => {
             <h2 className="text-3xl font-bold text-center mb-6">
               Login to your account
             </h2>
-            <div className="flex flex-col items-center">
-              <h5>Login using social networks</h5>
-              <div className="flex flex-row items-center">
-                <Image
-                  src="/facebook.svg"
-                  width="50"
-                  height="50"
-                  alt="facebook icon"
-                />
-                <Image
-                  src="/google.svg"
-                  width="50"
-                  height="50"
-                  alt="google icon"
-                />
-                <Image
-                  src="/twitter.svg"
-                  width="50"
-                  height="50"
-                  alt="twitter icon"
-                />
-              </div>
-              <span className="mt-4">OR</span>
-            </div>
+
             <form className="px-8 pt-6 pb-8 mb-4 flex flex-col items-center">
               <div className="mb-4">
                 <input
