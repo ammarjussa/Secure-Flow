@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { getAuth, signOut } from "firebase/auth";
 import { db } from "@/firebase/firebase";
 import { collection, getDocs } from "firebase/firestore";
+import AdminDashboard from "@/components/DashboardComponents/AdminDashboard";
+import ProducerDashboard from "@/components/DashboardComponents/ProducerDashboard";
+import RetailerDashboard from "@/components/DashboardComponents/RetailerDashboard";
 
 const DashboardPage: React.FC<{}> = () => {
   const { user }: any = useAuthContext();
@@ -53,27 +56,9 @@ const DashboardPage: React.FC<{}> = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-bold mb-2">Total Orders</h3>
-            <p className="text-gray-700">500</p>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-bold mb-2">Pending Orders</h3>
-            <p className="text-gray-700">30</p>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-bold mb-2">Completed Orders</h3>
-            <p className="text-gray-700">470</p>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-bold mb-2">Revenue</h3>
-            <p className="text-gray-700">$10,000</p>
-          </div>
-        </div>
+        {/* <AdminDashboard /> */}
+        <ProducerDashboard />
+        {/* <RetailerDashboard /> */}
       </main>
     </div>
   );

@@ -7,13 +7,11 @@ export default function LoginLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
-        <Header />
-        <main>
-          <AuthContextProvider>{children}</AuthContextProvider>
-        </main>
-      </body>
-    </html>
+    <section>
+      <Header />
+      <main>
+        <AuthContextProvider>{children}</AuthContextProvider>
+      </main>
+    </section>
   );
 }
