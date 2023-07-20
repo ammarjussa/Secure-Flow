@@ -17,7 +17,11 @@ const modalStyles = {
   },
 };
 
-const AdminDashboard: React.FC = () => {
+interface Props {
+  data: any;
+}
+
+const AdminDashboard: React.FC<Props> = ({ data }) => {
   // Dummy data for demonstration purposes
   const dummyParticipants = [
     {
@@ -55,7 +59,7 @@ const AdminDashboard: React.FC = () => {
         Participants Waiting for Approval
       </h2>
       <ul>
-        {dummyParticipants.map((participant) => (
+        {data.map((participant: any) => (
           <li
             key={participant.id}
             className="flex justify-between items-center py-2 border-b border-gray-300"

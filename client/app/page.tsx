@@ -1,11 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { getAuth, signOut } from "firebase/auth";
 import { db } from "@/firebase/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  getDoc,
+  doc,
+  query,
+  where,
+} from "firebase/firestore";
 import AdminDashboard from "@/components/DashboardComponents/AdminDashboard";
 import ProducerDashboard from "@/components/DashboardComponents/ProducerDashboard";
 import RetailerDashboard from "@/components/DashboardComponents/RetailerDashboard";
@@ -13,24 +20,40 @@ import Header from "@/components/Header";
 
 const DashboardPage: React.FC<{}> = () => {
   const { user }: any = useAuthContext();
+  const [role, setRole] = useState(null);
+  const [participantData, setParticipantData] = useState<any>([]);
 
   const router = useRouter();
   const auth = getAuth();
+  console.log(user.displayName);
 
   useEffect(() => {
     if (user === null) router.push("/login");
+    const fetchUser = async () => {
+      const collectionRef = collection(db, "participants");
+      const qry = query(collectionRef, where("email", "==", user?.email));
+      const docSnap = await getDocs(qry);
+      setRole(docSnap.docs[0].data().role);
+    };
+    fetchUser();
   }, [user]);
 
   useEffect(() => {
     const fetchData = async () => {
       const querySnapshot = await getDocs(collection(db, "participants"));
+      console.log(querySnapshot);
       querySnapshot.forEach((doc) => {
-        console.log(doc.id, " => ", doc.data());
+        setParticipantData([...participantData, doc.data()]);
       });
+      console.log(participantData);
     };
 
     fetchData();
-  });
+
+    return () => {
+      setParticipantData([]);
+    };
+  }, []);
 
   const handleLogOut = async (e: any) => {
     e.preventDefault();
@@ -59,8 +82,11 @@ const DashboardPage: React.FC<{}> = () => {
             </button>
           </div>
 
-          {/* <AdminDashboard /> */}
-          <ProducerDashboard />
+          {role === "Manufacturer" ? (
+            <AdminDashboard data={participantData} />
+          ) : null}
+          {/* <ProducerDashboard /> */}
+
           {/* <RetailerDashboard /> */}
         </main>
       </div>
