@@ -16,12 +16,15 @@ const ParticipantForm: React.FC = () => {
     name: "",
     email: "",
     phoneNumber: "",
+    organization: "Secure Organization",
     address: "",
     city: "",
     country: "",
     role: "",
     certification: "",
     productCategory: "",
+    approved: false,
+    walletAddress: null,
   });
 
   const handleChange = (e: any) => {
@@ -52,18 +55,22 @@ const ParticipantForm: React.FC = () => {
         name: "",
         email: "",
         phoneNumber: "",
+        organization: "Secure Organization",
         address: "",
         city: "",
         country: "",
         role: "",
         certification: "",
         productCategory: "",
+        approved: false,
+        walletAddress: null,
       });
 
       console.log("Added participant successfully");
       router.push("/");
-    } catch (err) {
+    } catch (err: any) {
       console.log(err);
+      alert(err?.message);
     }
   };
 

@@ -16,14 +16,14 @@ const ConnectWalletButton: React.FC<Props> = ({
       {address && !loading ? (
         <button
           onClick={onPressLogout}
-          className="bg-blue-500 text-white w-150 h-40 flex items-center justify-content-around text-sm font-bold cursor-pointer rounded-md"
+          className="bg-blue-500 text-white w-200 py-4 px-6 mr-4 flex items-center justify-content-around text-sm font-bold cursor-pointer rounded-md"
         >
           Disconnect
         </button>
       ) : loading ? (
         <button
           className={
-            "bg-blue-500 text-white w-150 h-40 flex items-center justify-content-around text-sm font-bold rounded-md "
+            "bg-blue-500 text-white w-200 py-4 px-6 mr-4 flex items-center justify-content-around text-sm font-bold rounded-md "
           }
           disabled
         >
@@ -32,9 +32,9 @@ const ConnectWalletButton: React.FC<Props> = ({
       ) : (
         <button
           onClick={onPressConnect}
-          className="bg-blue-500 text-white w-150 h-40 flex items-center justify-content-around text-sm font-bold cursor-pointer rounded-md"
+          className="bg-blue-500 text-white py-4 px-6 mr-4  flex items-center justify-content-around text-sm font-bold cursor-pointer rounded-md"
         >
-          Connect Wallet
+          Connect
         </button>
       )}
     </div>
