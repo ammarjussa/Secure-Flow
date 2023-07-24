@@ -5,18 +5,12 @@ import { useAuthContext } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { getAuth, signOut } from "firebase/auth";
 import { db } from "@/firebase/firebase";
-import {
-  collection,
-  getDocs,
-  getDoc,
-  doc,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import AdminDashboard from "@/components/DashboardComponents/AdminDashboard";
 import ProducerDashboard from "@/components/DashboardComponents/ProducerDashboard";
 import RetailerDashboard from "@/components/DashboardComponents/RetailerDashboard";
 import Header from "@/components/Header";
+import WholesalerDashboard from "@/components/DashboardComponents/WholesalerDashboard";
 
 const DashboardPage: React.FC<{}> = () => {
   const { user }: any = useAuthContext();
@@ -66,9 +60,15 @@ const DashboardPage: React.FC<{}> = () => {
               Sign Out
             </button>
           </div>
-          {role === "Admin" ? <AdminDashboard /> : null}
-          {/* <ProducerDashboard /> */}
-          {/* <RetailerDashboard /> */}
+          {role === "Admin" ? (
+            <AdminDashboard />
+          ) : role === "Wholesaler" ? (
+            <WholesalerDashboard user={user} />
+          ) : role === "Manufacturer" ? (
+            <ProducerDashboard user={user} />
+          ) : role === "Retailer" ? (
+            <RetailerDashboard user={user} />
+          ) : null}
         </main>
       </div>
     </div>

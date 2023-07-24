@@ -6,19 +6,20 @@ interface Props {
   user: any;
 }
 
-const RetailerDashboard: React.FC<Props> = ({ user }) => {
-  const [retailData, setRetailData] = useState<any>();
+const WholesalerDashboard: React.FC<Props> = ({ user }) => {
+  const [wholeData, setWholeData] = useState<any>(null);
   useEffect(() => {
     const fetchData = async () => {
       const collectionRef = collection(db, "participants");
       const qry = query(collectionRef, where("email", "==", user?.email));
       const docSnap = await getDocs(qry);
-      setRetailData(docSnap.docs[0].data());
+      setWholeData(docSnap.docs[0].data());
     };
 
     fetchData();
-    console.log(retailData);
+    console.log(wholeData);
   }, []);
+
   const dummyWholesalers = [
     {
       id: 1,
@@ -32,7 +33,6 @@ const RetailerDashboard: React.FC<Props> = ({ user }) => {
         },
       ],
     },
-    // Add more wholesalers and their products as needed
   ];
   const dummyOrderHistory = [
     {
@@ -41,15 +41,13 @@ const RetailerDashboard: React.FC<Props> = ({ user }) => {
       quantity: 5,
       totalPrice: 54.95,
     },
-    // Add more order history as needed
   ];
   return (
     <div className="p-4">
-      {retailData?.approved ? (
+      {wholeData?.approved ? (
         <div>
           <h2 className="text-2xl font-bold mb-4">Available Products</h2>
           <div className="grid grid-cols-2 gap-4">
-            {/* Wholesalers List */}
             {dummyWholesalers.map((wholesaler) => (
               <div key={wholesaler.id}>
                 <h3 className="text-xl font-semibold mb-2">
@@ -85,7 +83,6 @@ const RetailerDashboard: React.FC<Props> = ({ user }) => {
             ))}
           </div>
 
-          {/* Order History */}
           <div className="mt-8">
             <h2 className="text-2xl font-bold mb-4">Order History</h2>
             <table className="w-full border-collapse table-auto">
@@ -109,10 +106,10 @@ const RetailerDashboard: React.FC<Props> = ({ user }) => {
           </div>
         </div>
       ) : (
-        <p>WAIT FOR APPROVAL</p>
+        <p>WAIT FOR APPROVAL BY ADMIN</p>
       )}
     </div>
   );
 };
 
-export default RetailerDashboard;
+export default WholesalerDashboard;
