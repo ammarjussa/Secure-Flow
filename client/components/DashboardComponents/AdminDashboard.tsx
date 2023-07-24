@@ -30,7 +30,11 @@ const AdminDashboard: React.FC = () => {
     const fetchData = async () => {
       const dataArr: any[] = [];
       const collectionRef = collection(db, "participants");
-      const qry = query(collectionRef, where("role", "!=", "Admin"));
+      const qry = query(
+        collectionRef,
+        where("role", "!=", "Admin"),
+        where("approved", "==", false)
+      );
       const querySnapshot = await getDocs(qry);
       querySnapshot.forEach((doc) => {
         let obj = {
