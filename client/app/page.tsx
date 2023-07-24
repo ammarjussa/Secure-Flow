@@ -21,14 +21,15 @@ import Header from "@/components/Header";
 const DashboardPage: React.FC<{}> = () => {
   const { user }: any = useAuthContext();
   const [role, setRole] = useState(null);
-  const [participantData, setParticipantData] = useState<any>([]);
 
   const router = useRouter();
   const auth = getAuth();
-  console.log(user.displayName);
 
   useEffect(() => {
     if (user === null) router.push("/login");
+  }, [user]);
+
+  useEffect(() => {
     const fetchUser = async () => {
       const collectionRef = collection(db, "participants");
       const qry = query(collectionRef, where("email", "==", user?.email));
@@ -36,29 +37,13 @@ const DashboardPage: React.FC<{}> = () => {
       setRole(docSnap.docs[0].data().role);
     };
     fetchUser();
-  }, [user]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const querySnapshot = await getDocs(collection(db, "participants"));
-      console.log(querySnapshot);
-      querySnapshot.forEach((doc) => {
-        setParticipantData([...participantData, doc.data()]);
-      });
-      console.log(participantData);
-    };
-
-    fetchData();
-
-    return () => {
-      setParticipantData([]);
-    };
   }, []);
 
   const handleLogOut = async (e: any) => {
     e.preventDefault();
     try {
       await signOut(auth);
+      router.push("/login");
     } catch (err) {
       console.log(err);
     }
@@ -67,7 +52,7 @@ const DashboardPage: React.FC<{}> = () => {
   return (
     <div>
       <Header page="dashboard" />
-      <div className="flex flex-col h-screen">
+      <div className="flex flex-col">
         <main className="flex-grow p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold mb-4">
@@ -81,12 +66,8 @@ const DashboardPage: React.FC<{}> = () => {
               Sign Out
             </button>
           </div>
-
-          {role === "Manufacturer" ? (
-            <AdminDashboard data={participantData} />
-          ) : null}
+          {role === "Admin" ? <AdminDashboard /> : null}
           {/* <ProducerDashboard /> */}
-
           {/* <RetailerDashboard /> */}
         </main>
       </div>

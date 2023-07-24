@@ -1,9 +1,16 @@
 "use client";
 
-// AdminDashboard.tsx
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "react-modal";
+import { db } from "@/firebase/firebase";
+import {
+  collection,
+  getDocs,
+  doc,
+  setDoc,
+  where,
+  query,
+} from "firebase/firestore";
 
 const modalStyles = {
   content: {
@@ -13,44 +20,55 @@ const modalStyles = {
     bottom: "auto",
     marginRight: "-50%",
     transform: "translate(-50%, -50%)",
-    maxWidth: "400px", // Limit the width of the modal
+    maxWidth: "400px",
   },
 };
 
-interface Props {
-  data: any;
-}
+const AdminDashboard: React.FC = () => {
+  const [participantData, setParticipantData] = useState<any>();
+  useEffect(() => {
+    const fetchData = async () => {
+      const dataArr: any[] = [];
+      const collectionRef = collection(db, "participants");
+      const qry = query(collectionRef, where("role", "!=", "Admin"));
+      const querySnapshot = await getDocs(qry);
+      querySnapshot.forEach((doc) => {
+        let obj = {
+          id: doc.id,
+          data: doc.data(),
+        };
+        dataArr.push(obj);
+      });
+      setParticipantData(dataArr);
+    };
+    fetchData();
+  }, []);
 
-const AdminDashboard: React.FC<Props> = ({ data }) => {
-  // Dummy data for demonstration purposes
-  const dummyParticipants = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john@example.com",
-      organization: "XYZ Corp",
-      phoneNumber: "1234567890",
-      // Add other participant fields
-    },
-    // Add more participants as needed
-  ];
-
-  // State to manage the modal visibility and selected participant
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<any>(null);
 
-  // Function to open the modal and set the selected participant
   const handleViewParticipant = (participant: any) => {
     setSelectedParticipant(participant);
     setIsModalOpen(true);
   };
 
-  // Function to approve the selected participant (you can implement the approval logic here)
-  const handleApproveParticipant = () => {
-    // Add your approval logic here
-    console.log("Participant approved:", selectedParticipant);
-    // Close the modal after approval
-    setIsModalOpen(false);
+  const handleApproveParticipant = async (id: string) => {
+    const docRef = doc(db, "participants", id);
+    try {
+      await setDoc(
+        docRef,
+        {
+          approved: true,
+        },
+        {
+          merge: true,
+        }
+      );
+
+      console.log("updated");
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -59,12 +77,12 @@ const AdminDashboard: React.FC<Props> = ({ data }) => {
         Participants Waiting for Approval
       </h2>
       <ul>
-        {data.map((participant: any) => (
+        {participantData?.map((participant: any) => (
           <li
             key={participant.id}
             className="flex justify-between items-center py-2 border-b border-gray-300"
           >
-            <span>{participant.name}</span>
+            <span>{participant.data.name}</span>
             <button
               onClick={() => handleViewParticipant(participant)}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
@@ -75,7 +93,6 @@ const AdminDashboard: React.FC<Props> = ({ data }) => {
         ))}
       </ul>
 
-      {/* Participant Details Modal */}
       <Modal
         isOpen={isModalOpen}
         onRequestClose={() => setIsModalOpen(false)}
@@ -87,16 +104,15 @@ const AdminDashboard: React.FC<Props> = ({ data }) => {
         </h2>
         {selectedParticipant && (
           <div>
-            <p>Name: {selectedParticipant.name}</p>
-            <p>Email: {selectedParticipant.email}</p>
-            <p>Organization: {selectedParticipant.organization}</p>
-            <p>Phone Number: {selectedParticipant.phoneNumber}</p>
-            {/* Add other participant fields */}
+            <p>Name: {selectedParticipant.data.name}</p>
+            <p>Email: {selectedParticipant.data.email}</p>
+            <p>Organization: {selectedParticipant.data.organization}</p>
+            <p>Phone Number: {selectedParticipant.data.phoneNumber}</p>
           </div>
         )}
         <div className="flex justify-between mt-6">
           <button
-            onClick={handleApproveParticipant}
+            onClick={() => handleApproveParticipant(selectedParticipant.id)}
             className="px-4 py-2 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition-colors duration-300"
           >
             Approve

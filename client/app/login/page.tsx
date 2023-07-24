@@ -57,8 +57,12 @@ const LoginPage: React.FC = () => {
 
               <button
                 className="bg-blue-500 mt-4 hover:bg-blue-700 text-white font-bold py-2 px-10 rounded-3xl focus:outline-none focus:shadow-outline"
-                type="button"
+                type="submit"
                 onClick={handleSubmit}
+                onKeyDown={(e: any) => {
+                  console.log(e.key);
+                  e.key === "Enter" ? handleSubmit : null;
+                }}
               >
                 Sign In
               </button>
