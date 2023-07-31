@@ -1,0 +1,373 @@
+[
+  {
+    "type": "event",
+    "name": "ProductAdded",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "productId",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "type": "string",
+        "name": "name",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "type": "uint256",
+        "name": "quantity",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "type": "uint256",
+        "name": "price",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ProductDelivered",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "productId",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "function",
+    "name": "addProduct",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "name",
+        "internalType": "string"
+      },
+      {
+        "type": "uint256",
+        "name": "quantity",
+        "internalType": "uint256"
+      },
+      {
+        "type": "uint256",
+        "name": "price",
+        "internalType": "uint256"
+      },
+      {
+        "type": "uint8",
+        "name": "partType",
+        "internalType": "enum SecureFlow.ParticipantType"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getAddress",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "address",
+        "name": "",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getBalance",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getConsumer",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "productId",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "address",
+        "name": "",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getManufacturer",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "productId",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "address",
+        "name": "",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getRetailer",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "productId",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "address",
+        "name": "",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getWholeSaler",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "productId",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "address",
+        "name": "",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "markOrderDelivered",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "orderId",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "orderCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "orders",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "",
+        "internalType": "address"
+      },
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "id",
+        "internalType": "uint256"
+      },
+      {
+        "type": "uint256",
+        "name": "productId",
+        "internalType": "uint256"
+      },
+      {
+        "type": "address",
+        "name": "buyer",
+        "internalType": "address"
+      },
+      {
+        "type": "address",
+        "name": "seller",
+        "internalType": "address"
+      },
+      {
+        "type": "uint8",
+        "name": "buyerType",
+        "internalType": "enum SecureFlow.ParticipantType"
+      },
+      {
+        "type": "uint256",
+        "name": "quantity",
+        "internalType": "uint256"
+      },
+      {
+        "type": "uint256",
+        "name": "amount",
+        "internalType": "uint256"
+      },
+      {
+        "type": "uint256",
+        "name": "orderTime",
+        "internalType": "uint256"
+      },
+      {
+        "type": "bool",
+        "name": "isDelivered",
+        "internalType": "bool"
+      },
+      {
+        "type": "uint256",
+        "name": "deliveryTime",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "placeOrder",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "productId",
+        "internalType": "uint256"
+      },
+      {
+        "type": "address",
+        "name": "seller",
+        "internalType": "address"
+      },
+      {
+        "type": "uint8",
+        "name": "buyerType",
+        "internalType": "enum SecureFlow.ParticipantType"
+      },
+      {
+        "type": "uint256",
+        "name": "quantity",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "productCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "products",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "",
+        "internalType": "address"
+      },
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "id",
+        "internalType": "uint256"
+      },
+      {
+        "type": "string",
+        "name": "name",
+        "internalType": "string"
+      },
+      {
+        "type": "uint256",
+        "name": "quantity",
+        "internalType": "uint256"
+      },
+      {
+        "type": "uint256",
+        "name": "price",
+        "internalType": "uint256"
+      },
+      {
+        "type": "address",
+        "name": "manufacturer",
+        "internalType": "address"
+      },
+      {
+        "type": "address",
+        "name": "wholesaler",
+        "internalType": "address"
+      },
+      {
+        "type": "address",
+        "name": "retailer",
+        "internalType": "address"
+      },
+      {
+        "type": "address",
+        "name": "consumer",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  }
+]
