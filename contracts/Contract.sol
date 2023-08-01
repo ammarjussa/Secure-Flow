@@ -2,7 +2,7 @@
 pragma solidity ^0.8.9;
 
 // Uncomment this line to use console.log
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract SecureFlow {
 
@@ -26,7 +26,8 @@ contract SecureFlow {
 
 
     event ProductAdded(uint256 indexed productId, string name, uint256 quantity, uint256 price);
-    event ProductDelivered(uint256 indexed productId);
+		event OrderCreated(uint256 indexed orderId, address buyer, address seller, uint256 quantity, uint256 amount);
+		event OrderDelivered(uint256 indexed orderId, address buyer, address seller, uint256 quantity, uint256 amount, bool isDelivered);
 
      struct Order {
         uint256 id;
@@ -74,7 +75,8 @@ contract SecureFlow {
         require(product.quantity >= quantity, "Insufficient stock");
 
         uint256 amount = quantity * (product.price * 1 ether);
-        require(msg.value >= amount, "Not the correct amount");
+				console.log(msg.value, amount);
+        require(msg.value == amount, "Not the correct amount");
 
         balance = msg.value;
 
@@ -90,6 +92,8 @@ contract SecureFlow {
 
         orders[seller][orderCount] = newOrder;
         orderCount++;
+
+				emit OrderCreated(newOrder.id, newOrder.buyer, newOrder.seller, quantity, amount);
     }
 
      function markOrderDelivered(uint256 orderId) external payable {
@@ -129,6 +133,8 @@ contract SecureFlow {
         balance = 0;
 
         order.isDelivered = true;
+
+				emit OrderDelivered(order.id, order.buyer, order.seller, order.quantity, order.amount, order.isDelivered);
     }
 
     function getManufacturer(uint256 productId) external view returns (address) {
