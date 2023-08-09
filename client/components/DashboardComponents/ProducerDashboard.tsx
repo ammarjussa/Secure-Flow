@@ -97,7 +97,7 @@ const ProducerDashboard: React.FC<Props> = ({ user }) => {
           from: address,
         },
       });
-      console.info("contract call successs", data);
+      console.info("contract call success", data);
       setIsModalOpen(false);
     } catch (err) {
       console.error("contract call failure", err);
@@ -185,9 +185,6 @@ const ProducerDashboard: React.FC<Props> = ({ user }) => {
                   type="text"
                   id="name"
                   name="name"
-                  value={product.name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                   required
                 />
               </div>
