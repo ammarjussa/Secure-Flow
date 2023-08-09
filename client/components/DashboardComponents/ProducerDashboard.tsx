@@ -4,9 +4,9 @@ import { db } from "../../firebase/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 // import BarGraph from "../Charts/BarGraph";
 import {
-  Web3Button,
   useAddress,
   useContract,
+  useContractWrite,
   useContractEvents,
 } from "@thirdweb-dev/react";
 import SecureFlowABI from "../../SecureFlow.abi.json";
@@ -28,12 +28,6 @@ interface Props {
   user: any;
 }
 
-// const productLevels = {
-//   TV: 3,
-//   Fridge: 4,
-//   AC: 10,
-// };
-
 const ProducerDashboard: React.FC<Props> = ({ user }) => {
   const [prodData, setProdData] = useState<any>();
   const address = useAddress();
@@ -42,15 +36,22 @@ const ProducerDashboard: React.FC<Props> = ({ user }) => {
     SecureFlowABI
   );
 
-  const { data, isLoading, error } = useContractEvents(contract);
+  const { mutateAsync: addProduct, isLoading: isl } = useContractWrite(
+    contract,
+    "addProduct"
+  );
+
+  const {
+    data: event,
+    isLoading,
+    error,
+  } = useContractEvents(contract, "ProductAdded");
   if (isLoading) {
     console.log("loading");
   }
   if (error) {
     console.log(error);
   }
-
-  console.log(data);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,8 +63,6 @@ const ProducerDashboard: React.FC<Props> = ({ user }) => {
 
     fetchData();
   }, []);
-
-  useEffect(() => {});
 
   const dummyOrders = [
     {
@@ -89,6 +88,22 @@ const ProducerDashboard: React.FC<Props> = ({ user }) => {
     }));
   };
 
+  const call = async (e: any, product: any) => {
+    e.preventDefault();
+    try {
+      const data = await addProduct({
+        args: [product.name, product.quantity, product.price, 0],
+        overrides: {
+          from: address,
+        },
+      });
+      console.info("contract call successs", data);
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error("contract call failure", err);
+    }
+  };
+
   return (
     <div className="p-4">
       {prodData?.approved ? (
@@ -111,7 +126,7 @@ const ProducerDashboard: React.FC<Props> = ({ user }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {data?.map((product: any) => (
+                  {event?.map((product: any) => (
                     <tr key={parseInt(product?.data.productId)}>
                       <td className="px-4 py-2 border">{product?.data.name}</td>
                       <td className="px-4 py-2 border">
@@ -158,6 +173,7 @@ const ProducerDashboard: React.FC<Props> = ({ user }) => {
             onRequestClose={() => setIsModalOpen(false)}
             style={modalStyles}
             contentLabel="Add Product"
+            ariaHideApp={false}
           >
             <h2 className="text-2xl font-bold mb-4">Add Product</h2>
             <form className="space-y-4">
@@ -204,27 +220,12 @@ const ProducerDashboard: React.FC<Props> = ({ user }) => {
                 />
               </div>
               <div className="flex justify-end mt-6">
-                <Web3Button
-                  contractAddress={
-                    process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string
-                  }
-                  contractAbi={SecureFlowABI}
-                  action={(contract) =>
-                    contract.call(
-                      "addProduct",
-                      [product.name, product.quantity, product.price, "0"],
-                      {
-                        from: address,
-                      }
-                    )
-                  }
-                  onSuccess={() => {
-                    console.log("Successfully executed");
-                  }}
-                  onError={(err) => console.log(err)}
+                <button
+                  onClick={(e: any) => call(e, product)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
                 >
-                  Add Product
-                </Web3Button>
+                  Approve
+                </button>
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition-colors duration-300 ml-4"

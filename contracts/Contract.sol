@@ -93,7 +93,7 @@ contract SecureFlow {
         orders[seller][orderCount] = newOrder;
         orderCount++;
 
-				emit OrderCreated(newOrder.id, newOrder.buyer, newOrder.seller, quantity, amount);
+		emit OrderCreated(newOrder.id, newOrder.buyer, newOrder.seller, quantity, amount);
     }
 
      function markOrderDelivered(uint256 orderId) external payable {
@@ -134,7 +134,7 @@ contract SecureFlow {
 
         order.isDelivered = true;
 
-				emit OrderDelivered(order.id, order.buyer, order.seller, order.quantity, order.amount, order.isDelivered);
+		emit OrderDelivered(order.id, order.buyer, order.seller, order.quantity, order.amount, order.isDelivered);
     }
 
     function getManufacturer(uint256 productId) external view returns (address) {
@@ -161,12 +161,11 @@ contract SecureFlow {
         return product.consumer;
     }
 
-    function getBalance() public view returns (uint256) {
+    function getBalance() external view returns (uint256) {
         return balance;
     }
 
-		function getAddress() public view returns (address) {
-			return msg.sender;
-		}
-
+    function setBalance(uint256 _balance) external {
+        balance = _balance;
+    }
 }
