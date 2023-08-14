@@ -22,7 +22,8 @@ const LoginPage: NextPage = () => {
       if (result) {
         router.push("/");
       }
-    } catch (err) {
+    } catch (err: any) {
+      alert(err?.message);
       console.log(err);
     }
   };

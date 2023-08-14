@@ -43,7 +43,8 @@ contract SecureFlow {
     }
 
     uint256 public orderCount;
-    mapping(address => mapping(uint256 => Order)) public orders;
+     mapping(address => mapping(uint256 => Order)) public sellerOrders;
+    mapping(address => mapping(uint256 => Order)) public buyerOrders;
     
     function addProduct(string memory name, uint256 quantity, uint256 price, ParticipantType partType) external {
         require(quantity > 0, "Quantity must be greater than 0");
@@ -53,7 +54,7 @@ contract SecureFlow {
         newProduct.id = productCount;
         newProduct.name = name;
         newProduct.quantity = quantity;
-        newProduct.price = price * 1 ether;
+        newProduct.price = price;
         newProduct.manufacturer = msg.sender;
         products[msg.sender][productCount] = newProduct;
         productCount++;
@@ -74,13 +75,13 @@ contract SecureFlow {
         Product storage product = products[seller][productId];
         require(product.quantity >= quantity, "Insufficient stock");
 
-        uint256 amount = quantity * (product.price * 1 ether);
+        uint256 amount = quantity * (product.price);
 				console.log(msg.value, amount);
-        require(msg.value == amount, "Not the correct amount");
+        require(msg.value >= amount, "Not the correct amount");
 
         balance = msg.value;
 
-        Order storage newOrder = orders[seller][orderCount];
+        Order storage newOrder = sellerOrders[seller][orderCount];
         newOrder.id = orderCount;
         newOrder.productId = productId;
         newOrder.buyer = msg.sender;
@@ -90,15 +91,16 @@ contract SecureFlow {
         newOrder.isDelivered = false;
         newOrder.buyerType = buyerType;
 
-        orders[seller][orderCount] = newOrder;
+        sellerOrders[seller][orderCount] = newOrder;
+				buyerOrders[msg.sender][orderCount] = newOrder;
         orderCount++;
 
-		emit OrderCreated(newOrder.id, newOrder.buyer, newOrder.seller, quantity, amount);
+			emit OrderCreated(newOrder.id, newOrder.buyer, newOrder.seller, quantity, amount);
     }
 
      function markOrderDelivered(uint256 orderId) external payable {
         require(orderId >= 0 && orderId <= orderCount, "Invalid order ID");
-        Order storage order = orders[msg.sender][orderId];
+        Order storage order = buyerOrders[msg.sender][orderId];
 
         require(!order.isDelivered, "Order is already delivered");
         require(order.seller == msg.sender, "You are not the seller of this order");
@@ -161,11 +163,44 @@ contract SecureFlow {
         return product.consumer;
     }
 
-    function getBalance() external view returns (uint256) {
-        return balance;
+       function getProductsData(address participant) external view returns (Product[] memory) {
+        Product[] memory prods = new Product[](productCount);
+        for(uint i; i<productCount; i++) {
+            Product storage prod = products[participant][i];
+            prods[i] = prod;
+        }
+        return prods;
+	}
+
+    function getProductsDataParticipants(address[] memory participants) external view returns (Product[] memory) {
+        Product[] memory prods = new Product[](productCount * participants.length);
+        uint count;
+        for(uint i; i<participants.length; i++) {
+            for(uint j; j<productCount; j++) {
+                Product storage prod = products[participants[i]][j];
+                prods[count] = prod;
+                count++;
+            }
+        }
+
+        return prods;
     }
 
-    function setBalance(uint256 _balance) external {
-        balance = _balance;
+    function getSellerOrdersData(address participant) external view returns (Order[] memory) {
+        Order[] memory ords = new Order[](orderCount);
+        for(uint i; i<orderCount; i++) {
+            Order storage ord = sellerOrders[participant][i];
+            ords[i] = ord;
+        }
+        return ords;
+    }
+
+    function getBuyerOrdersData(address participant) external view returns (Order[] memory) {
+        Order[] memory ords = new Order[](orderCount);
+        for(uint i; i<orderCount; i++) {
+            Order storage ord = buyerOrders[participant][i];
+            ords[i] = ord;
+        }
+        return ords;
     }
 }

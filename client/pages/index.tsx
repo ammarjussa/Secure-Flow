@@ -4,23 +4,17 @@ import { useAuthContext } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { getAuth, signOut } from "firebase/auth";
 import { db } from "../firebase/firebase";
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  doc,
-  setDoc,
-} from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import AdminDashboard from "../components/DashboardComponents/AdminDashboard";
 import ProducerDashboard from "../components/DashboardComponents/ProducerDashboard";
 import RetailerDashboard from "../components/DashboardComponents/RetailerDashboard";
 import Header from "../components/Header";
 import WholesalerDashboard from "../components/DashboardComponents/WholesalerDashboard";
+import Sidebar from "../components/Sidebar";
 
 const DashboardPage: NextPage = () => {
   const { user }: any = useAuthContext();
-  const [role, setRole] = useState(null);
+  const [userData, setUserData] = useState<any>(null);
 
   const router = useRouter();
   const auth = getAuth();
@@ -34,7 +28,7 @@ const DashboardPage: NextPage = () => {
       const collectionRef = collection(db, "participants");
       const qry = query(collectionRef, where("email", "==", user?.email));
       const docSnap = await getDocs(qry);
-      setRole(docSnap.docs[0].data().role);
+      setUserData(docSnap.docs[0].data());
     };
     fetchUser();
   }, []);
@@ -52,12 +46,16 @@ const DashboardPage: NextPage = () => {
   return (
     <div>
       <Header page="dashboard" />
-      <div className="flex flex-col">
+      <div className="flex">
+        <Sidebar user={userData} />
         <main className="flex-grow p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold mb-4">
-              Welcome to the SecureFlow Dashboard
-            </h2>
+            <div className="flex flex-col items-center">
+              <h1 className="text-4xl font-semibold">Dashboard</h1>
+              <p className="text-gray-500 mt-2">
+                Welcome back, {userData?.name}!
+              </p>
+            </div>
 
             <button
               onClick={handleLogOut}
@@ -66,14 +64,14 @@ const DashboardPage: NextPage = () => {
               Sign Out
             </button>
           </div>
-          {role === "Admin" ? (
+          {userData?.role === "Admin" ? (
             <AdminDashboard />
-          ) : role === "Wholesaler" ? (
-            <WholesalerDashboard user={user} />
-          ) : role === "Manufacturer" ? (
-            <ProducerDashboard user={user} />
-          ) : role === "Retailer" ? (
-            <RetailerDashboard user={user} />
+          ) : userData?.role === "Wholesaler" ? (
+            <WholesalerDashboard user={user} userData={userData} />
+          ) : userData?.role === "Manufacturer" ? (
+            <ProducerDashboard user={user} userData={userData} />
+          ) : userData?.role === "Retailer" ? (
+            <RetailerDashboard user={user} userData={userData} />
           ) : null}
         </main>
       </div>

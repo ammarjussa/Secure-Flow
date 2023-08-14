@@ -1,15 +1,15 @@
 import Modal from "react-modal";
 import { useState, useEffect } from "react";
-import { db } from "../../firebase/firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
-// import BarGraph from "../Charts/BarGraph";
+import { ethers } from "ethers";
 import {
   useAddress,
   useContract,
   useContractWrite,
-  useContractEvents,
+  useContractRead,
 } from "@thirdweb-dev/react";
 import SecureFlowABI from "../../SecureFlow.abi.json";
+import { Bar } from "react-chartjs-2";
+import { Chart, registerables } from "chart.js";
 
 const modalStyles = {
   content: {
@@ -23,14 +23,18 @@ const modalStyles = {
   },
 };
 
+Chart.register(...registerables);
+
 // ProducerDashboard.tsx
 interface Props {
   user: any;
+  userData: any;
 }
 
-const ProducerDashboard: React.FC<Props> = ({ user }) => {
-  const [prodData, setProdData] = useState<any>();
+const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
   const address = useAddress();
+  const [labels, setLabels] = useState<[]>();
+  const [quantities, setQuantities] = useState<[]>();
   const { contract } = useContract(
     process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
     SecureFlowABI
@@ -42,36 +46,41 @@ const ProducerDashboard: React.FC<Props> = ({ user }) => {
   );
 
   const {
-    data: event,
-    isLoading,
-    error,
-  } = useContractEvents(contract, "ProductAdded");
-  if (isLoading) {
+    data: products,
+    isLoading: productLoad,
+    error: productErr,
+  } = useContractRead(contract, "getProductsData", [address]);
+
+  const {
+    data: orders,
+    isLoading: orderLoad,
+    error: orderErr,
+  } = useContractRead(contract, "getOrdersData", [address]);
+
+  if (productLoad || orderLoad) {
     console.log("loading");
   }
-  if (error) {
-    console.log(error);
+  if (productErr || orderErr) {
+    console.log("Error");
   }
 
   useEffect(() => {
-    const fetchData = async () => {
-      const collectionRef = collection(db, "participants");
-      const qry = query(collectionRef, where("email", "==", user?.email));
-      const docSnap = await getDocs(qry);
-      setProdData(docSnap.docs[0].data());
+    const handleData = () => {
+      let lab: any = [];
+      let quan: any = [];
+      if (products) {
+        for (let product of products) {
+          lab.push(product?.name);
+          quan.push(parseInt(product?.quantity));
+        }
+      }
+      setLabels(lab);
+      setQuantities(quan);
     };
 
-    fetchData();
-  }, []);
-
-  const dummyOrders = [
-    {
-      id: 1,
-      productName: "Product 1",
-      quantity: 5,
-      totalPrice: 54.95,
-    },
-  ];
+    console.log(quantities);
+    handleData();
+  }, [products]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [product, setProduct] = useState({
@@ -90,9 +99,12 @@ const ProducerDashboard: React.FC<Props> = ({ user }) => {
 
   const call = async (e: any, product: any) => {
     e.preventDefault();
+    const weiPrice = ethers.utils.parseUnits(product.price, "ether");
+    console.log(product);
+
     try {
       const data = await addProduct({
-        args: [product.name, product.quantity, product.price, 0],
+        args: [product.name, product.quantity, weiPrice, 0],
         overrides: {
           from: address,
         },
@@ -104,9 +116,23 @@ const ProducerDashboard: React.FC<Props> = ({ user }) => {
     }
   };
 
+  const chartOptions: any = {
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+      x: {
+        type: "category",
+        beginAtZero: true,
+      },
+    },
+    // maintainAspectRatio: false,
+    responsive: true,
+  };
+
   return (
     <div className="p-4">
-      {prodData?.approved ? (
+      {userData?.approved ? (
         <div>
           <button
             onClick={() => setIsModalOpen(true)}
@@ -120,53 +146,77 @@ const ProducerDashboard: React.FC<Props> = ({ user }) => {
               <table className="w-full border-collapse table-auto">
                 <thead>
                   <tr>
+                    <th className="px-4 py-2 border">Id</th>
                     <th className="px-4 py-2 border">Product Name</th>
                     <th className="px-4 py-2 border">Quantity</th>
                     <th className="px-4 py-2 border">Price</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {event?.map((product: any) => (
-                    <tr key={parseInt(product?.data.productId)}>
-                      <td className="px-4 py-2 border">{product?.data.name}</td>
+                  {products?.map((product: any) => (
+                    <tr key={parseInt(product?.id)}>
                       <td className="px-4 py-2 border">
-                        {parseInt(product?.data.quantity)}
+                        {parseInt(product?.id)}
+                      </td>
+
+                      <td className="px-4 py-2 border">{product?.name}</td>
+                      <td className="px-4 py-2 border">
+                        {parseInt(product?.quantity)}
                       </td>
                       <td className="px-4 py-2 border">
-                        {parseInt(product?.data.price)}
+                        {parseFloat(ethers.utils.formatEther(product?.price))}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-
             <div>
               <h2 className="text-2xl font-bold mb-4">My Orders</h2>
               <table className="w-full border-collapse table-auto">
                 <thead>
                   <tr>
-                    <th className="px-4 py-2 border">Product Name</th>
+                    <th className="px-4 py-2 border">Id</th>
+                    <th className="px-4 py-2 border">Buyer Address</th>
                     <th className="px-4 py-2 border">Quantity</th>
-                    <th className="px-4 py-2 border">Total Price</th>
+                    <th className="px-4 py-2 border">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {dummyOrders.map((order) => (
-                    <tr key={order.id}>
-                      <td className="px-4 py-2 border">{order.productName}</td>
-                      <td className="px-4 py-2 border">{order.quantity}</td>
-                      <td className="px-4 py-2 border">{order.totalPrice}</td>
+                  {orders?.map((order: any) => (
+                    <tr key={parseInt(order?.id)}>
+                      <td className="px-4 py-2 border">
+                        {parseInt(order?.id)}
+                      </td>
+
+                      <td className="px-4 py-2 border">{order?.buyer}</td>
+                      <td className="px-4 py-2 border">
+                        {parseInt(order?.quantity)}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        {parseFloat(ethers.utils.formatEther(order?.amount))}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </div>
-          {/* 
-          <div className="block w-1/2">
-            <BarGraph data={productLevels} />
-          </div> */}
+
+          <Bar
+            data={{
+              labels: labels || [],
+              datasets: [
+                {
+                  label: "Amount",
+                  data: quantities,
+                  backgroundColor: "rgba(75, 192, 192, 0.6)",
+                },
+              ],
+            }}
+            // data={chartData}
+            options={chartOptions}
+          />
 
           <Modal
             isOpen={isModalOpen}
@@ -185,6 +235,8 @@ const ProducerDashboard: React.FC<Props> = ({ user }) => {
                   type="text"
                   id="name"
                   name="name"
+                  value={product.name}
+                  onChange={handleChange}
                   required
                 />
               </div>

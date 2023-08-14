@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Modal from "react-modal";
+import { ethers } from "ethers";
 import { db } from "../../firebase/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import {
@@ -9,9 +10,11 @@ import {
   useContractEvents,
 } from "@thirdweb-dev/react";
 import SecureFlowABI from "../../SecureFlow.abi.json";
+import Sidebar from "../Sidebar";
 
 interface Props {
   user: any;
+  userData: any;
 }
 
 const modalStyles = {
@@ -26,8 +29,7 @@ const modalStyles = {
   },
 };
 
-const WholesalerDashboard: React.FC<Props> = ({ user }) => {
-  const [wholeData, setWholeData] = useState<any>(null);
+const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const address = useAddress();
   const [order, setOrder] = useState({
@@ -36,6 +38,11 @@ const WholesalerDashboard: React.FC<Props> = ({ user }) => {
     buyerType: 1,
     quantity: 0,
   });
+
+	useEffect(()=> {
+		
+	})
+
   const [currentProduct, setCurrentProduct] = useState();
 
   const { contract } = useContract(
@@ -60,18 +67,6 @@ const WholesalerDashboard: React.FC<Props> = ({ user }) => {
     "placeOrder"
   );
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const collectionRef = collection(db, "participants");
-      const qry = query(collectionRef, where("email", "==", user?.email));
-      const docSnap = await getDocs(qry);
-      setWholeData(docSnap.docs[0].data());
-    };
-
-    fetchData();
-    console.log(wholeData);
-  }, []);
-
   const dummyOrderHistory = [
     {
       id: 1,
@@ -91,24 +86,34 @@ const WholesalerDashboard: React.FC<Props> = ({ user }) => {
 
   const call = async (e: any, order: any, product: any) => {
     e.preventDefault();
-    try {
-      const data = await addProduct({
-        args: [parseInt(product.productId), order.seller, 1, order.quantity],
-        overrides: {
-          from: address,
-          value: parseInt(product.price) * parseInt(order.quantity),
-        },
-      });
-      console.info("contract call success", data);
-      setIsModalOpen(false);
-    } catch (err) {
-      console.error("contract call failure", err);
-    }
+    // const ethValue = ethers.utils.formatEther(
+    //   parseInt(product.price) * parseInt(order.quantity)
+    // );
+    // console.log(ethValue, order.quantity, product.productId);
+
+    // try {
+    //   const data = await addProduct({
+    //     args: [
+    //       parseInt(product.productId),
+    //       order.seller,
+    //       1,
+    //       parseInt(order.quantity),
+    //     ],
+    //     overrides: {
+    //       from: address,
+    //       value: ethers.utils.parseEther(ethValue),
+    //     },
+    //   });
+    //   console.info("contract call success", data);
+    //   setIsModalOpen(false);
+    // } catch (err) {
+    //   console.error("contract call failure", err);
+    // }
   };
 
   return (
     <div className="p-4">
-      {wholeData?.approved ? (
+      {userData?.approved ? (
         <div>
           <h2 className="text-2xl font-bold mb-4">Available Products</h2>
           <div className="grid grid-cols-2 gap-4">
