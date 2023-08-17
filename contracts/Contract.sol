@@ -28,6 +28,7 @@ contract SecureFlow {
     event ProductAdded(uint256 indexed productId, string name, uint256 quantity, uint256 price);
 		event OrderCreated(uint256 indexed orderId, address buyer, address seller, uint256 quantity, uint256 amount);
 		event OrderDelivered(uint256 indexed orderId, address buyer, address seller, uint256 quantity, uint256 amount, bool isDelivered);
+		event throwTotalAmount(uint256 amount);
 
      struct Order {
         uint256 id;
@@ -50,6 +51,7 @@ contract SecureFlow {
         require(quantity > 0, "Quantity must be greater than 0");
         require(partType == ParticipantType.Manufacturer, "Only Manufacturer can add the product");
 
+
         Product storage newProduct = products[msg.sender][productCount];
         newProduct.id = productCount;
         newProduct.name = name;
@@ -68,6 +70,8 @@ contract SecureFlow {
         ParticipantType buyerType,
         uint256 quantity
     ) external payable {
+
+
         require(productId >= 0 && productId <= productCount, "Invalid product ID");
         require(seller != address(0), "Invalid seller address");
         require(quantity > 0, "Quantity must be greater than 0");
@@ -100,8 +104,8 @@ contract SecureFlow {
 
      function markOrderDelivered(uint256 orderId) external payable {
         require(orderId >= 0 && orderId <= orderCount, "Invalid order ID");
-        Order storage order = buyerOrders[msg.sender][orderId];
-
+        Order storage order = sellerOrders[msg.sender][orderId];
+				
         require(!order.isDelivered, "Order is already delivered");
         require(order.seller == msg.sender, "You are not the seller of this order");
 
@@ -115,8 +119,6 @@ contract SecureFlow {
         newProduct.name = product.name;
         newProduct.quantity = order.quantity;
         newProduct.price = product.price;
-     
-
 
         if(order.buyerType == ParticipantType.Wholesaler) {
             product.wholesaler = buyer;
@@ -136,41 +138,41 @@ contract SecureFlow {
 
         order.isDelivered = true;
 
-		emit OrderDelivered(order.id, order.buyer, order.seller, order.quantity, order.amount, order.isDelivered);
+			emit OrderDelivered(order.id, order.buyer, order.seller, order.quantity, order.amount, order.isDelivered);
     }
 
     function getManufacturer(uint256 productId) external view returns (address) {
-        require(productId > 0 && productId <= productCount, "Invalid product ID");
+        require(productId >= 0 && productId <= productCount, "Invalid product ID");
         Product storage product = products[msg.sender][productId];
         return product.manufacturer;
     }
 
     function getWholeSaler(uint256 productId) external view returns (address) {
-        require(productId > 0 && productId <= productCount, "Invalid product ID");
+        require(productId >= 0 && productId <= productCount, "Invalid product ID");
         Product storage product = products[msg.sender][productId];
         return product.wholesaler;
     }
 
     function getRetailer(uint256 productId) external view returns (address) {
-        require(productId > 0 && productId <= productCount, "Invalid product ID");
+        require(productId >= 0 && productId <= productCount, "Invalid product ID");
         Product storage product = products[msg.sender][productId];
         return product.wholesaler;
     }
-
+	
     function getConsumer(uint256 productId) external view returns (address) {
-        require(productId > 0 && productId <= productCount, "Invalid Product ID");
+        require(productId >= 0 && productId <= productCount, "Invalid Product ID");
         Product storage product = products[msg.sender][productId];
         return product.consumer;
     }
 
-       function getProductsData(address participant) external view returns (Product[] memory) {
-        Product[] memory prods = new Product[](productCount);
-        for(uint i; i<productCount; i++) {
-            Product storage prod = products[participant][i];
-            prods[i] = prod;
-        }
-        return prods;
-	}
+		function getProductsData(address participant) external view returns (Product[] memory) {
+				Product[] memory prods = new Product[](productCount);
+				for(uint i; i<productCount; i++) {
+						Product storage prod = products[participant][i];
+						prods[i] = prod;
+				}
+				return prods;
+		}
 
     function getProductsDataParticipants(address[] memory participants) external view returns (Product[] memory) {
         Product[] memory prods = new Product[](productCount * participants.length);
@@ -186,10 +188,27 @@ contract SecureFlow {
         return prods;
     }
 
-    function getSellerOrdersData(address participant) external view returns (Order[] memory) {
+    function getSellerOrdersDataDelivered(address participant) external returns (Order[] memory) {
+        Order[] memory ords = new Order[](orderCount);
+				uint256 totalAmount;
+        for(uint i; i<orderCount; i++) {
+            Order storage ord = sellerOrders[participant][i];
+						if(ord.isDelivered == true) {
+       	    	ords[i] = ord;
+							totalAmount+=ord.amount;
+						}
+        }
+				emit throwTotalAmount(totalAmount);
+        return ords;
+    }
+
+		function getSellerOrdersData(address participant) external view returns (Order[] memory) {
         Order[] memory ords = new Order[](orderCount);
         for(uint i; i<orderCount; i++) {
             Order storage ord = sellerOrders[participant][i];
+						if(ord.isDelivered == false) {
+       	    	ords[i] = ord;
+						}
             ords[i] = ord;
         }
         return ords;

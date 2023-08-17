@@ -11,6 +11,9 @@ import SecureFlowABI from "../../SecureFlow.abi.json";
 import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 
+const DUMMY_VALUE = 100;
+const DUMMY_CONVERSION = 0.603002;
+
 const modalStyles = {
   content: {
     top: "50%",
@@ -45,6 +48,11 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
     "addProduct"
   );
 
+  const { mutateAsync: markOrderDelivered, isLoading: islm } = useContractWrite(
+    contract,
+    "markOrderDelivered"
+  );
+
   const {
     data: products,
     isLoading: productLoad,
@@ -55,7 +63,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
     data: orders,
     isLoading: orderLoad,
     error: orderErr,
-  } = useContractRead(contract, "getOrdersData", [address]);
+  } = useContractRead(contract, "getSellerOrdersData", [address]);
 
   if (productLoad || orderLoad) {
     console.log("loading");
@@ -63,6 +71,10 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
   if (productErr || orderErr) {
     console.log("Error");
   }
+
+  const trimAddress = (address: string) => {
+    return address?.slice(0, 5) + "...." + address?.slice(-5);
+  };
 
   useEffect(() => {
     const handleData = () => {
@@ -78,7 +90,6 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
       setQuantities(quan);
     };
 
-    console.log(quantities);
     handleData();
   }, [products]);
 
@@ -97,10 +108,9 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
     }));
   };
 
-  const call = async (e: any, product: any) => {
+  const addProd = async (e: any, product: any) => {
     e.preventDefault();
     const weiPrice = ethers.utils.parseUnits(product.price, "ether");
-    console.log(product);
 
     try {
       const data = await addProduct({
@@ -116,6 +126,23 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
     }
   };
 
+  const markDelivered = async (e: any, order: any) => {
+    e.preventDefault();
+    console.log(order, address);
+    try {
+      const data = await markOrderDelivered({
+        args: [order?.id],
+        overrides: {
+          from: address,
+        },
+      });
+      console.info("contract call success", data);
+      alert("Successfully Delivered");
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   const chartOptions: any = {
     scales: {
       y: {
@@ -126,21 +153,34 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
         beginAtZero: true,
       },
     },
-    // maintainAspectRatio: false,
+    maintainAspectRatio: false,
     responsive: true,
   };
 
   return (
-    <div className="p-4">
+    <div className="flex flex-col">
+      <div className="flex flex-row items-center justify-between px-2">
+        <div className="mb-6">
+          <p className="text-xs text-gray-600">Total Money Earned</p>
+          <p className="text-md">
+            <span className="text-4xl font-semibold">{DUMMY_VALUE}</span>&nbsp;
+            MATIC
+          </p>
+          <p className="text-md">
+            ≈ ${(DUMMY_VALUE * DUMMY_CONVERSION).toFixed(2)}
+          </p>
+        </div>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-4  py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300 float-right"
+        >
+          Add Product
+        </button>
+      </div>
+
       {userData?.approved ? (
         <div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300 float-right"
-          >
-            Add Product
-          </button>
-          <div className="grid grid-cols-2 gap-4 mt-6 pt-6">
+          <div className="flex flex-row items-start justify-between px-2">
             <div>
               <h2 className="text-2xl font-bold mb-4">My Products</h2>
               <table className="w-full border-collapse table-auto">
@@ -171,52 +211,71 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                 </tbody>
               </table>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold mb-4">My Orders</h2>
-              <table className="w-full border-collapse table-auto">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-2 border">Id</th>
-                    <th className="px-4 py-2 border">Buyer Address</th>
-                    <th className="px-4 py-2 border">Quantity</th>
-                    <th className="px-4 py-2 border">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders?.map((order: any) => (
-                    <tr key={parseInt(order?.id)}>
-                      <td className="px-4 py-2 border">
-                        {parseInt(order?.id)}
-                      </td>
-
-                      <td className="px-4 py-2 border">{order?.buyer}</td>
-                      <td className="px-4 py-2 border">
-                        {parseInt(order?.quantity)}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        {parseFloat(ethers.utils.formatEther(order?.amount))}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="h-80 w-1/2">
+              <Bar
+                data={{
+                  labels: labels || [],
+                  datasets: [
+                    {
+                      label: "Amount",
+                      data: quantities,
+                      backgroundColor: "rgba(75, 192, 192, 0.6)",
+                    },
+                  ],
+                }}
+                options={chartOptions}
+              />
             </div>
           </div>
+          <div>
+            <h2 className="text-2xl font-bold mb-4">My Orders</h2>
+            <table className="w-full border-collapse table-auto">
+              <thead>
+                <tr>
+                  <th className="px-4 py-2 border">Id</th>
+                  <th className="px-4 py-2 border">Buyer Address</th>
+                  <th className="px-4 py-2 border">Quantity</th>
+                  <th className="px-4 py-2 border">Amount</th>
+                  <th className="px-4 py-2 border">Delivered</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders &&
+                  orders
+                    .filter(
+                      (order: any) =>
+                        order?.buyer !==
+                        "0x0000000000000000000000000000000000000000"
+                    )
+                    ?.map((order: any) => (
+                      <tr key={parseInt(order?.id)}>
+                        <td className="px-4 py-2 border">
+                          {parseInt(order?.id)}
+                        </td>
 
-          <Bar
-            data={{
-              labels: labels || [],
-              datasets: [
-                {
-                  label: "Amount",
-                  data: quantities,
-                  backgroundColor: "rgba(75, 192, 192, 0.6)",
-                },
-              ],
-            }}
-            // data={chartData}
-            options={chartOptions}
-          />
+                        <td className="px-4 py-2 border">
+                          {trimAddress(order?.buyer)}
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {parseInt(order?.quantity)}
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {parseFloat(ethers.utils.formatEther(order?.amount))}
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {order?.isDelivered ? "True" : "False"}
+                        </td>
+                        <button
+                          onClick={(e) => markDelivered(e, order)}
+                          className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
+                        >
+                          Mark Delivered
+                        </button>
+                      </tr>
+                    ))}
+              </tbody>
+            </table>
+          </div>
 
           <Modal
             isOpen={isModalOpen}
@@ -233,6 +292,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                 </label>
                 <input
                   type="text"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                   id="name"
                   name="name"
                   value={product.name}
@@ -270,7 +330,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
               </div>
               <div className="flex justify-end mt-6">
                 <button
-                  onClick={(e: any) => call(e, product)}
+                  onClick={(e: any) => addProd(e, product)}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
                 >
                   Approve

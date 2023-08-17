@@ -7,7 +7,7 @@ import {
   useAddress,
   useContract,
   useContractWrite,
-  useContractEvents,
+  useContractRead,
 } from "@thirdweb-dev/react";
 import SecureFlowABI from "../../SecureFlow.abi.json";
 import Sidebar from "../Sidebar";
@@ -31,6 +31,7 @@ const modalStyles = {
 
 const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [allAdd, setAllAdd] = useState();
   const address = useAddress();
   const [order, setOrder] = useState({
     productId: "",
@@ -39,9 +40,21 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
     quantity: 0,
   });
 
-	useEffect(()=> {
-		
-	})
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const collectionRef = collection(db, "participants");
+      const qry = query(collectionRef, where("role", "==", "Manufacturer"));
+      const querySnapshot = await getDocs(qry);
+      const addrs: any = [];
+      if (querySnapshot) {
+        querySnapshot.forEach((doc) => {
+          addrs.push(doc.data().walletAddress);
+        });
+      }
+      setAllAdd(addrs);
+    };
+    fetchUsers();
+  }, []);
 
   const [currentProduct, setCurrentProduct] = useState();
 
@@ -51,15 +64,16 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
   );
 
   const {
-    data: event,
-    isLoading,
-    error,
-  } = useContractEvents(contract, "ProductAdded");
-  if (isLoading) {
+    data: products,
+    isLoading: productLoad,
+    error: productErr,
+  } = useContractRead(contract, "getProductsDataParticipants", [allAdd]);
+
+  if (productLoad) {
     console.log("loading");
   }
-  if (error) {
-    console.log(error);
+  if (productErr) {
+    console.log(productErr);
   }
 
   const { mutateAsync: addProduct, isLoading: isl } = useContractWrite(
@@ -86,29 +100,23 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
 
   const call = async (e: any, order: any, product: any) => {
     e.preventDefault();
-    // const ethValue = ethers.utils.formatEther(
-    //   parseInt(product.price) * parseInt(order.quantity)
-    // );
-    // console.log(ethValue, order.quantity, product.productId);
+    const ethValue = ethers.utils.formatEther(
+      BigInt(product.price) * BigInt(order.quantity)
+    );
 
-    // try {
-    //   const data = await addProduct({
-    //     args: [
-    //       parseInt(product.productId),
-    //       order.seller,
-    //       1,
-    //       parseInt(order.quantity),
-    //     ],
-    //     overrides: {
-    //       from: address,
-    //       value: ethers.utils.parseEther(ethValue),
-    //     },
-    //   });
-    //   console.info("contract call success", data);
-    //   setIsModalOpen(false);
-    // } catch (err) {
-    //   console.error("contract call failure", err);
-    // }
+    try {
+      const data = await addProduct({
+        args: [parseInt(product.id), order.seller, 1, parseInt(order.quantity)],
+        overrides: {
+          from: address,
+          value: ethers.utils.parseEther(ethValue),
+        },
+      });
+      console.info("contract call success", data);
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error("contract call failure", err);
+    }
   };
 
   return (
@@ -117,29 +125,32 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
         <div>
           <h2 className="text-2xl font-bold mb-4">Available Products</h2>
           <div className="grid grid-cols-2 gap-4">
-            {(event as any)?.map((product: any) => (
-              <tr key={parseInt(product?.data.productId)}>
-                <td className="px-4 py-2 border">
-                  {parseInt(product?.data.productId)}
-                </td>
-                <td className="px-4 py-2 border">{product?.data.name}</td>
-                <td className="px-4 py-2 border">
-                  {parseInt(product?.data.quantity)}
-                </td>
-                <td className="px-4 py-2 border">
-                  {parseInt(product?.data.price)}
-                </td>
-                <button
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
-                  onClick={() => {
-                    setCurrentProduct(product);
-                    setIsModalOpen(true);
-                  }}
-                >
-                  Order Items
-                </button>
-              </tr>
-            ))}
+            {products &&
+              products
+                .filter((product: any) => product?.name !== "")
+                ?.map((product: any) => (
+                  <tr key={product?.quantity}>
+                    <td className="px-4 py-2 border">
+                      {parseInt(product?.id)}
+                    </td>
+                    <td className="px-4 py-2 border">{product?.name}</td>
+                    <td className="px-4 py-2 border">
+                      {parseInt(product?.quantity)}
+                    </td>
+                    <td className="px-4 py-2 border">
+                      {ethers.utils.formatEther(product?.price).toString()}
+                    </td>
+                    <button
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
+                      onClick={() => {
+                        setCurrentProduct(product);
+                        setIsModalOpen(true);
+                      }}
+                    >
+                      Order Items
+                    </button>
+                  </tr>
+                ))}
           </div>
 
           <Modal
@@ -149,13 +160,14 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
             contentLabel="Add Product"
             ariaHideApp={false}
           >
-            <h2 className="text-2xl font-bold mb-4">Add Product</h2>
+            <h2 className="text-2xl font-bold mb-4">Order Product</h2>
             <form className="space-y-4">
               <div>
                 <label htmlFor="seller" className="block font-medium mb-2">
                   Seller Address
                 </label>
                 <input
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                   type="text"
                   id="seller"
                   name="seller"
@@ -181,9 +193,7 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
 
               <div className="flex justify-end mt-6">
                 <button
-                  onClick={(e: any) =>
-                    call(e, order, (currentProduct as any)?.data)
-                  }
+                  onClick={(e: any) => call(e, order, currentProduct as any)}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
                 >
                   Approve

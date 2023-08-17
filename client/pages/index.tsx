@@ -44,7 +44,7 @@ const DashboardPage: NextPage = () => {
   };
 
   return (
-    <div>
+    <div className="max-h-screen overflow-hidden">
       <Header page="dashboard" />
       <div className="flex">
         <Sidebar user={userData} />
@@ -64,15 +64,17 @@ const DashboardPage: NextPage = () => {
               Sign Out
             </button>
           </div>
-          {userData?.role === "Admin" ? (
-            <AdminDashboard />
-          ) : userData?.role === "Wholesaler" ? (
-            <WholesalerDashboard user={user} userData={userData} />
-          ) : userData?.role === "Manufacturer" ? (
-            <ProducerDashboard user={user} userData={userData} />
-          ) : userData?.role === "Retailer" ? (
-            <RetailerDashboard user={user} userData={userData} />
-          ) : null}
+          <div className="mt-6 h-[calc(100vh-200px)] overflow-auto">
+            {userData?.role === "Admin" ? (
+              <AdminDashboard />
+            ) : userData?.role === "Wholesaler" ? (
+              <WholesalerDashboard user={user} userData={userData} />
+            ) : userData?.role === "Manufacturer" ? (
+              <ProducerDashboard user={user} userData={userData} />
+            ) : userData?.role === "Retailer" ? (
+              <RetailerDashboard user={user} userData={userData} />
+            ) : null}
+          </div>
         </main>
       </div>
     </div>
