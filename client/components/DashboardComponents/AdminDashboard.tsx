@@ -9,12 +9,7 @@ import {
   where,
   query,
 } from "firebase/firestore";
-import {
-  Web3Button,
-  useContract,
-  useContractRead,
-  useAddress,
-} from "@thirdweb-dev/react";
+import { useContract, useContractRead, useAddress } from "@thirdweb-dev/react";
 
 import SecureFlowABI from "../../SecureFlow.abi.json";
 
@@ -129,14 +124,6 @@ const AdminDashboard: React.FC = () => {
           </li>
         ))}
       </ul>
-
-      {/* <Web3Button
-        contractAddress={process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string}
-        action={(contract) => contract.call("addContract")}
-        onSuccess={() => {
-          console.log();
-        }}
-      ></Web3Button> */}
 
       <Modal
         isOpen={isModalOpen}

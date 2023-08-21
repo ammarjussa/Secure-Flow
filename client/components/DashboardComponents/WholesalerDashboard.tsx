@@ -11,6 +11,8 @@ import {
 } from "@thirdweb-dev/react";
 import SecureFlowABI from "../../SecureFlow.abi.json";
 import Sidebar from "../Sidebar";
+import { Bar } from "react-chartjs-2";
+import { Chart, registerables } from "chart.js";
 
 interface Props {
   user: any;
@@ -29,6 +31,8 @@ const modalStyles = {
   },
 };
 
+Chart.register(...registerables);
+
 const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [allAdd, setAllAdd] = useState();
@@ -39,6 +43,13 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
     buyerType: 1,
     quantity: 0,
   });
+
+  const [labels, setLabels] = useState<[]>();
+  const [quantities, setQuantities] = useState<[]>();
+
+  const trimAddress = (address: string) => {
+    return address?.slice(0, 5) + "...." + address?.slice(-5);
+  };
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -69,11 +80,17 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
     error: productErr,
   } = useContractRead(contract, "getProductsDataParticipants", [allAdd]);
 
-  if (productLoad) {
+  const {
+    data: orders,
+    isLoading: orderLoad,
+    error: orderErr,
+  } = useContractRead(contract, "getBuyerOrdersData", [address]);
+
+  if (productLoad || orderLoad) {
     console.log("loading");
   }
-  if (productErr) {
-    console.log(productErr);
+  if (productErr || orderErr) {
+    console.log("Error");
   }
 
   const { mutateAsync: addProduct, isLoading: isl } = useContractWrite(
@@ -81,14 +98,24 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
     "placeOrder"
   );
 
-  const dummyOrderHistory = [
-    {
-      id: 1,
-      productName: "Product 1",
-      quantity: 5,
-      totalPrice: 54.95,
-    },
-  ];
+  useEffect(() => {
+    const handleData = () => {
+      let lab: any = [];
+      let quan: any = [];
+
+      if (orders) {
+        for (let order of orders) {
+          lab.push(order?.name);
+          quan.push(parseInt(order?.quantity));
+        }
+      }
+
+      setLabels(lab);
+      setQuantities(quan);
+    };
+
+    handleData();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -119,40 +146,129 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
     }
   };
 
+  const chartOptions: any = {
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+      x: {
+        type: "category",
+        beginAtZero: true,
+      },
+    },
+    maintainAspectRatio: false,
+    responsive: true,
+  };
+
   return (
     <div className="p-4">
       {userData?.approved ? (
         <div>
-          <h2 className="text-2xl font-bold mb-4">Available Products</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {products &&
-              products
-                .filter((product: any) => product?.name !== "")
-                ?.map((product: any) => (
-                  <tr key={product?.quantity}>
-                    <td className="px-4 py-2 border">
-                      {parseInt(product?.id)}
-                    </td>
-                    <td className="px-4 py-2 border">{product?.name}</td>
-                    <td className="px-4 py-2 border">
-                      {parseInt(product?.quantity)}
-                    </td>
-                    <td className="px-4 py-2 border">
-                      {ethers.utils.formatEther(product?.price).toString()}
-                    </td>
-                    <button
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
-                      onClick={() => {
-                        setCurrentProduct(product);
-                        setIsModalOpen(true);
-                      }}
-                    >
-                      Order Items
-                    </button>
-                  </tr>
-                ))}
+          <div className="bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg mb-20">
+            <h2 className="text-2xl font-bold mb-4">Available Products</h2>
+            <table className="w-full border-collapse table-auto">
+              <thead>
+                <tr>
+                  <th className="px-4 py-2 border">Id</th>
+                  <th className="px-4 py-2 border">Product Name</th>
+                  <th className="px-4 py-2 border">Quantity</th>
+                  <th className="px-4 py-2 border">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products &&
+                  products
+                    .filter((product: any) => product?.name !== "")
+                    ?.map((product: any) => (
+                      <tr key={parseInt(product?.id)}>
+                        <td className="px-4 py-2 border">
+                          {parseInt(product?.id)}
+                        </td>
+
+                        <td className="px-4 py-2 border">{product?.name}</td>
+                        <td className="px-4 py-2 border">
+                          {parseInt(product?.quantity)}
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {parseFloat(ethers.utils.formatEther(product?.price))}
+                        </td>
+                        <button
+                          className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
+                          onClick={() => {
+                            setCurrentProduct(product);
+                            setIsModalOpen(true);
+                          }}
+                        >
+                          Order Items
+                        </button>
+                      </tr>
+                    ))}
+              </tbody>
+            </table>
           </div>
 
+          <div className="flex flex-row items-start justify-between px-2 mb-20">
+            <div className="bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg mr-18">
+              <h2 className="text-2xl font-bold mb-4">My Orders</h2>
+              <table className="w-full border-collapse table-auto">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-2 border">Id</th>
+                    <th className="px-4 py-2 border">Seller Address</th>
+                    <th className="px-4 py-2 border">Quantity</th>
+                    <th className="px-4 py-2 border">Amount</th>
+                    <th className="px-4 py-2 border">Delivered</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders &&
+                    orders
+                      .filter(
+                        (order: any) =>
+                          order?.buyer !==
+                          "0x0000000000000000000000000000000000000000"
+                      )
+                      ?.map((order: any) => (
+                        <tr key={parseInt(order?.id)}>
+                          <td className="px-4 py-2 border">
+                            {parseInt(order?.id)}
+                          </td>
+
+                          <td className="px-4 py-2 border">
+                            {trimAddress(order?.seller)}
+                          </td>
+                          <td className="px-4 py-2 border">
+                            {parseInt(order?.quantity)}
+                          </td>
+                          <td className="px-4 py-2 border">
+                            {parseFloat(
+                              ethers.utils.formatEther(order?.amount)
+                            )}
+                          </td>
+                          <td className="px-4 py-2 border">
+                            {order?.isDelivered ? "True" : "False"}
+                          </td>
+                        </tr>
+                      ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="h-80 bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg">
+              <Bar
+                data={{
+                  labels: labels || [],
+                  datasets: [
+                    {
+                      label: "Amount",
+                      data: quantities,
+                      backgroundColor: "rgba(75, 192, 192, 0.6)",
+                    },
+                  ],
+                }}
+                options={chartOptions}
+              />
+            </div>
+          </div>
           <Modal
             isOpen={isModalOpen}
             onRequestClose={() => setIsModalOpen(false)}
@@ -207,28 +323,6 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
               </div>
             </form>
           </Modal>
-
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold mb-4">Order History</h2>
-            <table className="w-full border-collapse table-auto">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2 border">Product Name</th>
-                  <th className="px-4 py-2 border">Quantity</th>
-                  <th className="px-4 py-2 border">Total Price</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dummyOrderHistory.map((order) => (
-                  <tr key={order.id}>
-                    <td className="px-4 py-2 border">{order.productName}</td>
-                    <td className="px-4 py-2 border">{order.quantity}</td>
-                    <td className="px-4 py-2 border">{order.totalPrice}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       ) : (
         <p>WAIT FOR APPROVAL BY ADMIN</p>

@@ -33,6 +33,7 @@ contract SecureFlow {
      struct Order {
         uint256 id;
         uint256 productId;
+				string productName;
         address buyer;
         address seller;
         ParticipantType buyerType;
@@ -44,7 +45,7 @@ contract SecureFlow {
     }
 
     uint256 public orderCount;
-     mapping(address => mapping(uint256 => Order)) public sellerOrders;
+    mapping(address => mapping(uint256 => Order)) public sellerOrders;
     mapping(address => mapping(uint256 => Order)) public buyerOrders;
     
     function addProduct(string memory name, uint256 quantity, uint256 price, ParticipantType partType) external {
@@ -88,6 +89,7 @@ contract SecureFlow {
         Order storage newOrder = sellerOrders[seller][orderCount];
         newOrder.id = orderCount;
         newOrder.productId = productId;
+				newOrder.productName = product.name;
         newOrder.buyer = msg.sender;
         newOrder.seller = seller;
         newOrder.quantity = quantity;
@@ -188,17 +190,17 @@ contract SecureFlow {
         return prods;
     }
 
-    function getSellerOrdersDataDelivered(address participant) external returns (Order[] memory) {
+    function getSellerOrdersDataDelivered(address participant) external view returns (Order[] memory) {
         Order[] memory ords = new Order[](orderCount);
-				uint256 totalAmount;
+				// uint256 totalAmount;
         for(uint i; i<orderCount; i++) {
             Order storage ord = sellerOrders[participant][i];
 						if(ord.isDelivered == true) {
        	    	ords[i] = ord;
-							totalAmount+=ord.amount;
+							// totalAmount+=ord.amount;
 						}
         }
-				emit throwTotalAmount(totalAmount);
+				// emit throwTotalAmount(totalAmount);
         return ords;
     }
 
@@ -209,7 +211,6 @@ contract SecureFlow {
 						if(ord.isDelivered == false) {
        	    	ords[i] = ord;
 						}
-            ords[i] = ord;
         }
         return ords;
     }

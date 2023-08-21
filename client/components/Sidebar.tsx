@@ -7,7 +7,7 @@ const Sidebar: React.FC<Props> = ({ user }) => {
     return address?.slice(0, 5) + "...." + address?.slice(-5);
   };
   return (
-    <div className="flex overflow-hidden">
+    <div className="flex overflow-hidden bg-white">
       <div className="flex flex-col items-center justify-between h-[calc(100vh-190px)] w-64  py-8 px-4">
         <div className="flex flex-col items-center">
           <img

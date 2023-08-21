@@ -8,9 +8,10 @@ body {
   padding: 0;
   margin: 0;
   font-family: "Inter", sans-serif;
+  background: #efefef;
 }
 
-/* a {
+a {
   color: #84309c;
   text-decoration: none;
 }
@@ -18,8 +19,3 @@ body {
 * {
   box-sizing: border-box;
 }
-
-body {
-  color: #e7e8e8;
-  background: #070707;
-} */

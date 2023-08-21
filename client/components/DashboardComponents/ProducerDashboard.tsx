@@ -38,6 +38,11 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
   const address = useAddress();
   const [labels, setLabels] = useState<[]>();
   const [quantities, setQuantities] = useState<[]>();
+  const [orderLabels, setOrderLabels] = useState<[]>();
+  const [orderQuantities, setOrderQuantities] = useState<[]>();
+  const [delOrderLabels, setDelOrderLabels] = useState<[]>();
+  const [delOrderQuantities, setDelOrderQuantities] = useState<[]>();
+
   const { contract } = useContract(
     process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
     SecureFlowABI
@@ -65,10 +70,16 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
     error: orderErr,
   } = useContractRead(contract, "getSellerOrdersData", [address]);
 
-  if (productLoad || orderLoad) {
+  const {
+    data: ordersDel,
+    isLoading: delLoad,
+    error: delError,
+  } = useContractRead(contract, "getSellerOrdersDataDelivered", [address]);
+
+  if (productLoad || orderLoad || delLoad) {
     console.log("loading");
   }
-  if (productErr || orderErr) {
+  if (productErr || orderErr || delError) {
     console.log("Error");
   }
 
@@ -80,14 +91,36 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
     const handleData = () => {
       let lab: any = [];
       let quan: any = [];
+      let orderLab: any = [];
+      let orderQuan: any = [];
+      let delOrderLab: any = [];
+      let delOrderQuan: any = [];
+
       if (products) {
         for (let product of products) {
           lab.push(product?.name);
           quan.push(parseInt(product?.quantity));
         }
       }
+      if (orders) {
+        for (let order of orders) {
+          orderLab.push(order?.productName);
+          orderQuan.push(parseInt(order?.quantity));
+        }
+      }
+      if (ordersDel) {
+        for (let order of ordersDel) {
+          delOrderLab.push(order?.productName);
+          delOrderQuan.push(parseInt(order?.quantity));
+        }
+      }
+
       setLabels(lab);
       setQuantities(quan);
+      setOrderLabels(orderLab);
+      setOrderQuantities(orderQuan);
+      setDelOrderLabels(delOrderLab);
+      setDelOrderQuantities(delOrderQuan);
     };
 
     handleData();
@@ -180,8 +213,8 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
 
       {userData?.approved ? (
         <div>
-          <div className="flex flex-row items-start justify-between px-2">
-            <div>
+          <div className="flex flex-row items-start justify-between px-2 mb-20">
+            <div className="bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg mr-18">
               <h2 className="text-2xl font-bold mb-4">My Products</h2>
               <table className="w-full border-collapse table-auto">
                 <thead>
@@ -211,7 +244,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                 </tbody>
               </table>
             </div>
-            <div className="h-80 w-1/2">
+            <div className="h-80 bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg">
               <Bar
                 data={{
                   labels: labels || [],
@@ -227,54 +260,135 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
               />
             </div>
           </div>
-          <div>
-            <h2 className="text-2xl font-bold mb-4">My Orders</h2>
-            <table className="w-full border-collapse table-auto">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2 border">Id</th>
-                  <th className="px-4 py-2 border">Buyer Address</th>
-                  <th className="px-4 py-2 border">Quantity</th>
-                  <th className="px-4 py-2 border">Amount</th>
-                  <th className="px-4 py-2 border">Delivered</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders &&
-                  orders
-                    .filter(
-                      (order: any) =>
-                        order?.buyer !==
-                        "0x0000000000000000000000000000000000000000"
-                    )
-                    ?.map((order: any) => (
-                      <tr key={parseInt(order?.id)}>
-                        <td className="px-4 py-2 border">
-                          {parseInt(order?.id)}
-                        </td>
+          <div className="flex flex-row items-start justify-between px-2 mb-20">
+            <div className="bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg mr-18">
+              <h2 className="text-2xl font-bold mb-4">My Pending Orders</h2>
+              <table className="w-full border-collapse table-auto">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-2 border">Id</th>
+                    <th className="px-4 py-2 border">Buyer Address</th>
+                    <th className="px-4 py-2 border">Quantity</th>
+                    <th className="px-4 py-2 border">Amount</th>
+                    <th className="px-4 py-2 border">Delivered</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders &&
+                    orders
+                      .filter(
+                        (order: any) =>
+                          order?.buyer !==
+                          "0x0000000000000000000000000000000000000000"
+                      )
+                      ?.map((order: any) => (
+                        <tr key={parseInt(order?.id)}>
+                          <td className="px-4 py-2 border">
+                            {parseInt(order?.id)}
+                          </td>
 
-                        <td className="px-4 py-2 border">
-                          {trimAddress(order?.buyer)}
-                        </td>
-                        <td className="px-4 py-2 border">
-                          {parseInt(order?.quantity)}
-                        </td>
-                        <td className="px-4 py-2 border">
-                          {parseFloat(ethers.utils.formatEther(order?.amount))}
-                        </td>
-                        <td className="px-4 py-2 border">
-                          {order?.isDelivered ? "True" : "False"}
-                        </td>
-                        <button
-                          onClick={(e) => markDelivered(e, order)}
-                          className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
-                        >
-                          Mark Delivered
-                        </button>
-                      </tr>
-                    ))}
-              </tbody>
-            </table>
+                          <td className="px-4 py-2 border">
+                            {trimAddress(order?.buyer)}
+                          </td>
+                          <td className="px-4 py-2 border">
+                            {parseInt(order?.quantity)}
+                          </td>
+                          <td className="px-4 py-2 border">
+                            {parseFloat(
+                              ethers.utils.formatEther(order?.amount)
+                            )}
+                          </td>
+                          <td className="px-4 py-2 border">
+                            {order?.isDelivered ? "True" : "False"}
+                          </td>
+                          <button
+                            onClick={(e) => markDelivered(e, order)}
+                            className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
+                          >
+                            Mark Delivered
+                          </button>
+                        </tr>
+                      ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="h-80 bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg">
+              <Bar
+                data={{
+                  labels: orderLabels || [],
+                  datasets: [
+                    {
+                      label: "Amount",
+                      data: orderQuantities,
+                      backgroundColor: "rgba(45, 54, 132, 0.7)",
+                    },
+                  ],
+                }}
+                options={chartOptions}
+              />
+            </div>
+          </div>
+          <div className="flex flex-row items-start justify-between px-2 mb-20">
+            <div className="bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg mr-18">
+              <h2 className="text-2xl font-bold mb-4">My Delivered Orders</h2>
+              <table className="w-full border-collapse table-auto">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-2 border">Id</th>
+                    <th className="px-4 py-2 border">Buyer Address</th>
+                    <th className="px-4 py-2 border">Quantity</th>
+                    <th className="px-4 py-2 border">Amount</th>
+                    <th className="px-4 py-2 border">Delivered</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ordersDel &&
+                    ordersDel
+                      .filter(
+                        (order: any) =>
+                          order?.buyer !==
+                          "0x0000000000000000000000000000000000000000"
+                      )
+                      ?.map((order: any) => (
+                        <tr key={parseInt(order?.id)}>
+                          <td className="px-4 py-2 border">
+                            {parseInt(order?.id)}
+                          </td>
+
+                          <td className="px-4 py-2 border">
+                            {trimAddress(order?.buyer)}
+                          </td>
+                          <td className="px-4 py-2 border">
+                            {parseInt(order?.quantity)}
+                          </td>
+                          <td className="px-4 py-2 border">
+                            {parseFloat(
+                              ethers.utils.formatEther(order?.amount)
+                            )}
+                          </td>
+                          <td className="px-4 py-2 border">
+                            {order?.isDelivered ? "True" : "False"}
+                          </td>
+                        </tr>
+                      ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="h-80 bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg">
+              <Bar
+                data={{
+                  labels: delOrderLabels || [],
+                  datasets: [
+                    {
+                      label: "Amount",
+                      data: delOrderQuantities,
+                      backgroundColor: "rgba(34, 233, 100, 0.9)",
+                    },
+                  ],
+                }}
+                options={chartOptions}
+              />
+            </div>
           </div>
 
           <Modal
