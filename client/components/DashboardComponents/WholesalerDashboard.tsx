@@ -1,42 +1,28 @@
 import { useState, useEffect } from "react";
-import Modal from "react-modal";
 import { ethers } from "ethers";
-import { db } from "../../firebase/firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
 import {
-  useAddress,
   useContract,
-  useContractWrite,
   useContractRead,
 } from "@thirdweb-dev/react";
 import SecureFlowABI from "../../SecureFlow.abi.json";
-import Sidebar from "../Sidebar";
 import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
+import { WholesalerModal } from "../modals";
+import { useContractContext, useFirestoreContext } from "../../providers";
 
 interface Props {
   user: any;
   userData: any;
 }
 
-const modalStyles = {
-  content: {
-    top: "50%",
-    left: "50%",
-    right: "auto",
-    bottom: "auto",
-    marginRight: "-50%",
-    transform: "translate(-50%, -50%)",
-    maxWidth: "400px",
-  },
-};
-
 Chart.register(...registerables);
 
-const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
+const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
+  const { address, wholesaleOrders, woLoad, woErr, placeOrder, pOrderLoad } =
+    useContractContext();
+  const { allProdAdd, fetchAddressesByParticipant } = useFirestoreContext();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [allAdd, setAllAdd] = useState();
-  const address = useAddress();
   const [order, setOrder] = useState({
     productId: "",
     seller: "",
@@ -52,19 +38,7 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
   };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      const collectionRef = collection(db, "participants");
-      const qry = query(collectionRef, where("role", "==", "Manufacturer"));
-      const querySnapshot = await getDocs(qry);
-      const addrs: any = [];
-      if (querySnapshot) {
-        querySnapshot.forEach((doc) => {
-          addrs.push(doc.data().walletAddress);
-        });
-      }
-      setAllAdd(addrs);
-    };
-    fetchUsers();
+    fetchAddressesByParticipant("Manufacturer");
   }, []);
 
   const [currentProduct, setCurrentProduct] = useState();
@@ -78,33 +52,22 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
     data: products,
     isLoading: productLoad,
     error: productErr,
-  } = useContractRead(contract, "getProductsDataParticipants", [allAdd]);
+  } = useContractRead(contract, "getProductsDataParticipants", [allProdAdd]);
 
-  const {
-    data: orders,
-    isLoading: orderLoad,
-    error: orderErr,
-  } = useContractRead(contract, "getBuyerOrdersData", [address]);
-
-  if (productLoad || orderLoad) {
+  if (productLoad || woLoad || pOrderLoad) {
     console.log("loading");
   }
-  if (productErr || orderErr) {
+  if (productErr || woErr) {
     console.log("Error");
   }
-
-  const { mutateAsync: addProduct, isLoading: isl } = useContractWrite(
-    contract,
-    "placeOrder"
-  );
 
   useEffect(() => {
     const handleData = () => {
       let lab: any = [];
       let quan: any = [];
 
-      if (orders) {
-        for (let order of orders) {
+      if (wholesaleOrders) {
+        for (let order of wholesaleOrders) {
           lab.push(order?.name);
           quan.push(parseInt(order?.quantity));
         }
@@ -132,7 +95,7 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
     );
 
     try {
-      const data = await addProduct({
+      const data = await placeOrder({
         args: [parseInt(product.id), order.seller, 1, parseInt(order.quantity)],
         overrides: {
           from: address,
@@ -221,8 +184,8 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders &&
-                    orders
+                  {wholesaleOrders &&
+                    wholesaleOrders
                       .filter(
                         (order: any) =>
                           order?.buyer !==
@@ -269,60 +232,14 @@ const WholesalerDashboard: React.FC<Props> = ({ user, userData }) => {
               />
             </div>
           </div>
-          <Modal
-            isOpen={isModalOpen}
-            onRequestClose={() => setIsModalOpen(false)}
-            style={modalStyles}
-            contentLabel="Add Product"
-            ariaHideApp={false}
-          >
-            <h2 className="text-2xl font-bold mb-4">Order Product</h2>
-            <form className="space-y-4">
-              <div>
-                <label htmlFor="seller" className="block font-medium mb-2">
-                  Seller Address
-                </label>
-                <input
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  type="text"
-                  id="seller"
-                  name="seller"
-                  value={order.seller}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="quantity" className="block font-medium mb-2">
-                  Quantity
-                </label>
-                <input
-                  type="number"
-                  id="quantity"
-                  name="quantity"
-                  value={order.quantity}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
-              </div>
-
-              <div className="flex justify-end mt-6">
-                <button
-                  onClick={(e: any) => call(e, order, currentProduct as any)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
-                >
-                  Approve
-                </button>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition-colors duration-300 ml-4"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </Modal>
+          <WholesalerModal
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+            order={order}
+            currentProduct={currentProduct}
+            handleChange={handleChange}
+            call={call}
+          />
         </div>
       ) : (
         <p>WAIT FOR APPROVAL BY ADMIN</p>

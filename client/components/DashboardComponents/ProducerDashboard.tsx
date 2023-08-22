@@ -1,41 +1,38 @@
-import Modal from "react-modal";
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import {
-  useAddress,
-  useContract,
-  useContractWrite,
-  useContractRead,
-} from "@thirdweb-dev/react";
-import SecureFlowABI from "../../SecureFlow.abi.json";
 import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
+import { ProducerModal } from "../modals";
+import { useContractContext } from "../../providers";
 
 const DUMMY_VALUE = 100;
 const DUMMY_CONVERSION = 0.603002;
 
-const modalStyles = {
-  content: {
-    top: "50%",
-    left: "50%",
-    right: "auto",
-    bottom: "auto",
-    marginRight: "-50%",
-    transform: "translate(-50%, -50%)",
-    maxWidth: "400px",
-  },
-};
-
 Chart.register(...registerables);
 
-// ProducerDashboard.tsx
 interface Props {
   user: any;
   userData: any;
 }
 
 const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
-  const address = useAddress();
+  const {
+    address,
+    producerProducts,
+    ppLoad,
+    ppErr,
+    producerOrders,
+    poLoad,
+    poErr,
+    producersOrdersDelivered,
+    podLoad,
+    podErr,
+    addProduct,
+    apLoad,
+    markOrderDelivered,
+    modLoad,
+  } = useContractContext();
+
   const [labels, setLabels] = useState<[]>();
   const [quantities, setQuantities] = useState<[]>();
   const [orderLabels, setOrderLabels] = useState<[]>();
@@ -43,43 +40,10 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
   const [delOrderLabels, setDelOrderLabels] = useState<[]>();
   const [delOrderQuantities, setDelOrderQuantities] = useState<[]>();
 
-  const { contract } = useContract(
-    process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
-    SecureFlowABI
-  );
-
-  const { mutateAsync: addProduct, isLoading: isl } = useContractWrite(
-    contract,
-    "addProduct"
-  );
-
-  const { mutateAsync: markOrderDelivered, isLoading: islm } = useContractWrite(
-    contract,
-    "markOrderDelivered"
-  );
-
-  const {
-    data: products,
-    isLoading: productLoad,
-    error: productErr,
-  } = useContractRead(contract, "getProductsData", [address]);
-
-  const {
-    data: orders,
-    isLoading: orderLoad,
-    error: orderErr,
-  } = useContractRead(contract, "getSellerOrdersData", [address]);
-
-  const {
-    data: ordersDel,
-    isLoading: delLoad,
-    error: delError,
-  } = useContractRead(contract, "getSellerOrdersDataDelivered", [address]);
-
-  if (productLoad || orderLoad || delLoad) {
+  if (ppLoad || poLoad || podLoad || apLoad || modLoad) {
     console.log("loading");
   }
-  if (productErr || orderErr || delError) {
+  if (ppErr || poErr || podErr) {
     console.log("Error");
   }
 
@@ -96,20 +60,20 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
       let delOrderLab: any = [];
       let delOrderQuan: any = [];
 
-      if (products) {
-        for (let product of products) {
+      if (producerProducts) {
+        for (let product of producerProducts) {
           lab.push(product?.name);
           quan.push(parseInt(product?.quantity));
         }
       }
-      if (orders) {
-        for (let order of orders) {
+      if (producerOrders) {
+        for (let order of producerOrders) {
           orderLab.push(order?.productName);
           orderQuan.push(parseInt(order?.quantity));
         }
       }
-      if (ordersDel) {
-        for (let order of ordersDel) {
+      if (producersOrdersDelivered) {
+        for (let order of producersOrdersDelivered) {
           delOrderLab.push(order?.productName);
           delOrderQuan.push(parseInt(order?.quantity));
         }
@@ -124,7 +88,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
     };
 
     handleData();
-  }, [products]);
+  }, [producerOrders, producerProducts, producersOrdersDelivered]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [product, setProduct] = useState({
@@ -226,7 +190,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {products?.map((product: any) => (
+                  {producerProducts?.map((product: any) => (
                     <tr key={parseInt(product?.id)}>
                       <td className="px-4 py-2 border">
                         {parseInt(product?.id)}
@@ -274,8 +238,8 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders &&
-                    orders
+                  {producerOrders &&
+                    producerOrders
                       .filter(
                         (order: any) =>
                           order?.buyer !==
@@ -342,8 +306,8 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {ordersDel &&
-                    ordersDel
+                  {producersOrdersDelivered &&
+                    producersOrdersDelivered
                       .filter(
                         (order: any) =>
                           order?.buyer !==
@@ -390,74 +354,13 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
               />
             </div>
           </div>
-
-          <Modal
-            isOpen={isModalOpen}
-            onRequestClose={() => setIsModalOpen(false)}
-            style={modalStyles}
-            contentLabel="Add Product"
-            ariaHideApp={false}
-          >
-            <h2 className="text-2xl font-bold mb-4">Add Product</h2>
-            <form className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block font-medium mb-2">
-                  Product Name
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  id="name"
-                  name="name"
-                  value={product.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="quantity" className="block font-medium mb-2">
-                  Quantity
-                </label>
-                <input
-                  type="number"
-                  id="quantity"
-                  name="quantity"
-                  value={product.quantity}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="price" className="block font-medium mb-2">
-                  Price
-                </label>
-                <input
-                  type="number"
-                  id="price"
-                  name="price"
-                  value={product.price}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
-              </div>
-              <div className="flex justify-end mt-6">
-                <button
-                  onClick={(e: any) => addProd(e, product)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
-                >
-                  Approve
-                </button>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition-colors duration-300 ml-4"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </Modal>
+          <ProducerModal
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+            product={product}
+            handleChange={handleChange}
+            addProd={addProd}
+          />
         </div>
       ) : (
         <p>WAIT FOR APPROVAL</p>

@@ -1,20 +1,19 @@
 import { NextPage } from "next";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuthContext } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { getAuth, signOut } from "firebase/auth";
-import { db } from "../firebase/firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
 import AdminDashboard from "../components/DashboardComponents/AdminDashboard";
 import ProducerDashboard from "../components/DashboardComponents/ProducerDashboard";
 import RetailerDashboard from "../components/DashboardComponents/RetailerDashboard";
 import Header from "../components/Header";
 import WholesalerDashboard from "../components/DashboardComponents/WholesalerDashboard";
 import Sidebar from "../components/Sidebar";
+import { useFirestoreContext } from "../providers";
 
 const DashboardPage: NextPage = () => {
   const { user }: any = useAuthContext();
-  const [userData, setUserData] = useState<any>(null);
+  const { userData, fetchUserByEmail } = useFirestoreContext();
 
   const router = useRouter();
   const auth = getAuth();
@@ -24,13 +23,7 @@ const DashboardPage: NextPage = () => {
   }, [user]);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const collectionRef = collection(db, "participants");
-      const qry = query(collectionRef, where("email", "==", user?.email));
-      const docSnap = await getDocs(qry);
-      setUserData(docSnap.docs[0].data());
-    };
-    fetchUser();
+    fetchUserByEmail(user);
   }, []);
 
   const handleLogOut = async (e: any) => {
