@@ -4,6 +4,11 @@ pragma solidity ^0.8.9;
 // Uncomment this line to use console.log
 import "hardhat/console.sol";
 
+// Resolve the balance issue.
+// Add the order time and the delivery time in the order object everytime an order is created.
+// Add total amount mapping to track total income and spend of participants. Calculate this when order is marked delivered.
+// Order reject function that would give the amount to the buyer back when rejected by seller.
+
 contract SecureFlow {
 
     uint256 balance;
@@ -71,7 +76,6 @@ contract SecureFlow {
         ParticipantType buyerType,
         uint256 quantity
     ) external payable {
-
 
         require(productId >= 0 && productId <= productCount, "Invalid product ID");
         require(seller != address(0), "Invalid seller address");

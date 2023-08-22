@@ -40,10 +40,10 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
   const [delOrderLabels, setDelOrderLabels] = useState<[]>();
   const [delOrderQuantities, setDelOrderQuantities] = useState<[]>();
 
-  if (ppLoad || poLoad || podLoad || apLoad || modLoad) {
+  if (podLoad) {
     console.log("loading");
   }
-  if (ppErr || poErr || podErr) {
+  if (podErr) {
     console.log("Error");
   }
 
@@ -88,7 +88,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
     };
 
     handleData();
-  }, [producerOrders, producerProducts, producersOrdersDelivered]);
+  }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [product, setProduct] = useState({

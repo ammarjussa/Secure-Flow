@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import {
-  useContract,
-  useContractRead,
-} from "@thirdweb-dev/react";
+import { useContract, useContractRead } from "@thirdweb-dev/react";
 import SecureFlowABI from "../../SecureFlow.abi.json";
 import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { WholesalerModal } from "../modals";
 import { useContractContext, useFirestoreContext } from "../../providers";
+import { SellerInfoModal } from "../modals/SellerInfoModal";
 
 interface Props {
   user: any;
@@ -20,15 +18,20 @@ Chart.register(...registerables);
 const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
   const { address, wholesaleOrders, woLoad, woErr, placeOrder, pOrderLoad } =
     useContractContext();
-  const { allProdAdd, fetchAddressesByParticipant } = useFirestoreContext();
+  const { allProdAdd, allProdAddData, fetchAddressesByParticipant } =
+    useFirestoreContext();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [sellerInfoModalOpen, setSellerInfoModalOpen] =
+    useState<boolean>(false);
   const [order, setOrder] = useState({
     productId: "",
-    seller: "",
     buyerType: 1,
     quantity: 0,
   });
+
+  const [showProduct, setShowProduct] = useState<any>();
+  const [currentSeller, setCurrentSeller] = useState<any>();
 
   const [labels, setLabels] = useState<[]>();
   const [quantities, setQuantities] = useState<[]>();
@@ -80,6 +83,28 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
     handleData();
   }, []);
 
+  const handleProductData = (products: any) => {
+    let productsArr = [];
+    let newProducts = products.filter((product: any) => product.name !== "");
+    for (let prod of newProducts) {
+      let newProd: any = {};
+      newProd = prod;
+      newProd = { ...newProd, sellerName: "" };
+      for (const [key, value] of Object.entries(allProdAddData)) {
+        if (newProd.manufacturer === key) {
+          newProd.sellerName = (value as any)?.name;
+        }
+      }
+      productsArr.push(newProd);
+    }
+
+    setShowProduct(productsArr);
+  };
+
+  useEffect(() => {
+    products && handleProductData(products);
+  }, [products]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setOrder((prevState) => ({
@@ -96,7 +121,12 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
 
     try {
       const data = await placeOrder({
-        args: [parseInt(product.id), order.seller, 1, parseInt(order.quantity)],
+        args: [
+          parseInt(product.id),
+          product?.manufacturer,
+          1,
+          parseInt(order.quantity),
+        ],
         overrides: {
           from: address,
           value: ethers.utils.parseEther(ethValue),
@@ -132,7 +162,7 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
             <table className="w-full border-collapse table-auto">
               <thead>
                 <tr>
-                  <th className="px-4 py-2 border">Id</th>
+                  <th className="px-4 py-2 border">Seller Name</th>
                   <th className="px-4 py-2 border">Product Name</th>
                   <th className="px-4 py-2 border">Quantity</th>
                   <th className="px-4 py-2 border">Price</th>
@@ -140,32 +170,38 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
               </thead>
               <tbody>
                 {products &&
-                  products
-                    .filter((product: any) => product?.name !== "")
-                    ?.map((product: any) => (
-                      <tr key={parseInt(product?.id)}>
-                        <td className="px-4 py-2 border">
-                          {parseInt(product?.id)}
-                        </td>
+                  showProduct?.map((product: any) => (
+                    <tr key={parseInt(product?.id)}>
+                      <td
+                        className="px-4 py-2 border font-bold cursor-pointer hover:underline"
+                        onClick={() => {
+                          setSellerInfoModalOpen(true);
+                          setCurrentSeller(
+                            allProdAddData[product?.manufacturer]
+                          );
+                        }}
+                      >
+                        {product?.sellerName}
+                      </td>
 
-                        <td className="px-4 py-2 border">{product?.name}</td>
-                        <td className="px-4 py-2 border">
-                          {parseInt(product?.quantity)}
-                        </td>
-                        <td className="px-4 py-2 border">
-                          {parseFloat(ethers.utils.formatEther(product?.price))}
-                        </td>
-                        <button
-                          className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
-                          onClick={() => {
-                            setCurrentProduct(product);
-                            setIsModalOpen(true);
-                          }}
-                        >
-                          Order Items
-                        </button>
-                      </tr>
-                    ))}
+                      <td className="px-4 py-2 border">{product?.name}</td>
+                      <td className="px-4 py-2 border">
+                        {parseInt(product?.quantity)}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        {parseFloat(ethers.utils.formatEther(product?.price))}
+                      </td>
+                      <button
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
+                        onClick={() => {
+                          setCurrentProduct(product);
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        Order Items
+                      </button>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
@@ -239,6 +275,11 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
             currentProduct={currentProduct}
             handleChange={handleChange}
             call={call}
+          />
+          <SellerInfoModal
+            isModalOpen={sellerInfoModalOpen}
+            setIsModalOpen={setSellerInfoModalOpen}
+            sellerInfo={currentSeller}
           />
         </div>
       ) : (

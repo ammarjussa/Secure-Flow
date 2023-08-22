@@ -40,20 +40,6 @@ export const WholesalerModal: React.FC<Props> = ({
       <h2 className="text-2xl font-bold mb-4">Order Product</h2>
       <form className="space-y-4">
         <div>
-          <label htmlFor="seller" className="block font-medium mb-2">
-            Seller Address
-          </label>
-          <input
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-            type="text"
-            id="seller"
-            name="seller"
-            value={order.seller}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
           <label htmlFor="quantity" className="block font-medium mb-2">
             Quantity
           </label>

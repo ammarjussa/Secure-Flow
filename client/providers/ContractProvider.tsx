@@ -63,12 +63,13 @@ export const ContractProvider: React.FC<Props> = ({ children }) => {
     SecureFlowABI
   );
 
-  // PRODUCERS CONTRACT
   const {
-    data: producerProducts,
-    isLoading: ppLoad,
-    error: ppErr,
-  } = useContractRead(contract, "getProductsData", [address]);
+    data: producersOrdersDelivered,
+    isLoading: podLoad,
+    error: podErr,
+  } = useContractRead(contract, "getSellerOrdersDataDelivered", [address]);
+
+  console.log(producersOrdersDelivered);
 
   const {
     data: producerOrders,
@@ -77,10 +78,10 @@ export const ContractProvider: React.FC<Props> = ({ children }) => {
   } = useContractRead(contract, "getSellerOrdersData", [address]);
 
   const {
-    data: producersOrdersDelivered,
-    isLoading: podLoad,
-    error: podErr,
-  } = useContractRead(contract, "getSellerOrdersDataDelivered", [address]);
+    data: producerProducts,
+    isLoading: ppLoad,
+    error: ppErr,
+  } = useContractRead(contract, "getProductsData", [address]);
 
   const { mutateAsync: addProduct, isLoading: apLoad } = useContractWrite(
     contract,
