@@ -143,6 +143,7 @@ contract SecureFlow {
         balance = 0;
 
         order.isDelivered = true;
+				buyerOrders[buyer][orderId] = order;
 
 			emit OrderDelivered(order.id, order.buyer, order.seller, order.quantity, order.amount, order.isDelivered);
     }

@@ -69,8 +69,6 @@ export const ContractProvider: React.FC<Props> = ({ children }) => {
     error: podErr,
   } = useContractRead(contract, "getSellerOrdersDataDelivered", [address]);
 
-  console.log(producersOrdersDelivered);
-
   const {
     data: producerOrders,
     isLoading: poLoad,

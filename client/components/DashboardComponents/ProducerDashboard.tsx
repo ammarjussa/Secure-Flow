@@ -33,12 +33,14 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
     modLoad,
   } = useContractContext();
 
-  const [labels, setLabels] = useState<[]>();
-  const [quantities, setQuantities] = useState<[]>();
-  const [orderLabels, setOrderLabels] = useState<[]>();
-  const [orderQuantities, setOrderQuantities] = useState<[]>();
-  const [delOrderLabels, setDelOrderLabels] = useState<[]>();
-  const [delOrderQuantities, setDelOrderQuantities] = useState<[]>();
+  const [labels, setLabels] = useState<any>([]);
+  const [quantities, setQuantities] = useState<any>([]);
+  const [orderLabels, setOrderLabels] = useState<[]>([]);
+  const [orderQuantities, setOrderQuantities] = useState<[]>([]);
+  const [delOrderLabels, setDelOrderLabels] = useState<[]>([]);
+  const [delOrderQuantities, setDelOrderQuantities] = useState<[]>([]);
+
+  console.log(labels, orderLabels, delOrderLabels);
 
   if (podLoad) {
     console.log("loading");
@@ -88,7 +90,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
     };
 
     handleData();
-  }, []);
+  }, [producerProducts, producerOrders, producersOrdersDelivered]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [product, setProduct] = useState({
@@ -125,7 +127,6 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
 
   const markDelivered = async (e: any, order: any) => {
     e.preventDefault();
-    console.log(order, address);
     try {
       const data = await markOrderDelivered({
         args: [order?.id],
@@ -178,7 +179,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
       {userData?.approved ? (
         <div>
           <div className="flex flex-row items-start justify-between px-2 mb-20">
-            <div className="bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg mr-18">
+            <div className="bg-white border-gray-100 w-[48%] min-h-[330px] p-6 rounded-lg mr-18">
               <h2 className="text-2xl font-bold mb-4">My Products</h2>
               <table className="w-full border-collapse table-auto">
                 <thead>
@@ -208,7 +209,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                 </tbody>
               </table>
             </div>
-            <div className="h-80 bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg">
+            <div className="h-80 bg-white border-gray-100 w-[48%] min-h-[330px] p-6 rounded-lg">
               <Bar
                 data={{
                   labels: labels || [],
@@ -225,7 +226,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
             </div>
           </div>
           <div className="flex flex-row items-start justify-between px-2 mb-20">
-            <div className="bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg mr-18">
+            <div className="bg-white border-gray-100 w-[48%] min-h-[330px] p-6 rounded-lg mr-18">
               <h2 className="text-2xl font-bold mb-4">My Pending Orders</h2>
               <table className="w-full border-collapse table-auto">
                 <thead>
@@ -263,20 +264,19 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                             )}
                           </td>
                           <td className="px-4 py-2 border">
-                            {order?.isDelivered ? "True" : "False"}
+                            <button
+                              onClick={(e) => markDelivered(e, order)}
+                              className="px-2 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
+                            >
+                              Delivered
+                            </button>
                           </td>
-                          <button
-                            onClick={(e) => markDelivered(e, order)}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
-                          >
-                            Mark Delivered
-                          </button>
                         </tr>
                       ))}
                 </tbody>
               </table>
             </div>
-            <div className="h-80 bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg">
+            <div className="h-80 bg-white border-gray-100 w-[48%] min-h-[330px] p-6 rounded-lg">
               <Bar
                 data={{
                   labels: orderLabels || [],
@@ -293,7 +293,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
             </div>
           </div>
           <div className="flex flex-row items-start justify-between px-2 mb-20">
-            <div className="bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg mr-18">
+            <div className="bg-white border-gray-100 w-[48%] min-h-[330px] p-6 rounded-lg mr-18">
               <h2 className="text-2xl font-bold mb-4">My Delivered Orders</h2>
               <table className="w-full border-collapse table-auto">
                 <thead>
@@ -338,7 +338,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                 </tbody>
               </table>
             </div>
-            <div className="h-80 bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg">
+            <div className="h-80 bg-white border-gray-100 min-w-[48%] min-h-[330px] p-6 rounded-lg">
               <Bar
                 data={{
                   labels: delOrderLabels || [],

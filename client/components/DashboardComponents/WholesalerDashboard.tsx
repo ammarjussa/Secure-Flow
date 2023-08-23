@@ -71,7 +71,8 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
 
       if (wholesaleOrders) {
         for (let order of wholesaleOrders) {
-          lab.push(order?.name);
+          console.log(order);
+          lab.push(order?.productName);
           quan.push(parseInt(order?.quantity));
         }
       }
@@ -81,7 +82,9 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
     };
 
     handleData();
-  }, []);
+  }, [wholesaleOrders]);
+
+  // console.log(labels, quantities);
 
   const handleProductData = (products: any) => {
     let productsArr = [];
@@ -171,7 +174,7 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
               <tbody>
                 {products &&
                   showProduct?.map((product: any) => (
-                    <tr key={parseInt(product?.id)}>
+                    <tr key={product?.id + product?.manufacturer}>
                       <td
                         className="px-4 py-2 border font-bold cursor-pointer hover:underline"
                         onClick={() => {
@@ -207,12 +210,12 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
           </div>
 
           <div className="flex flex-row items-start justify-between px-2 mb-20">
-            <div className="bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg mr-18">
+            <div className="bg-white border-gray-100 w-[48%] min-h-[330px] py-6 px-2 rounded-lg mr-18">
               <h2 className="text-2xl font-bold mb-4">My Orders</h2>
               <table className="w-full border-collapse table-auto">
                 <thead>
                   <tr>
-                    <th className="px-4 py-2 border">Id</th>
+                    <th className="px-4 py-2 border">Product</th>
                     <th className="px-4 py-2 border">Seller Address</th>
                     <th className="px-4 py-2 border">Quantity</th>
                     <th className="px-4 py-2 border">Amount</th>
@@ -228,9 +231,9 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
                           "0x0000000000000000000000000000000000000000"
                       )
                       ?.map((order: any) => (
-                        <tr key={parseInt(order?.id)}>
+                        <tr key={order?.id + order?.seller}>
                           <td className="px-4 py-2 border">
-                            {parseInt(order?.id)}
+                            {order?.productName}
                           </td>
 
                           <td className="px-4 py-2 border">
@@ -252,7 +255,7 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
                 </tbody>
               </table>
             </div>
-            <div className="h-80 bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg">
+            <div className="h-80 bg-white border-gray-100 w-[48%] min-h-[330px] p-6 rounded-lg">
               <Bar
                 data={{
                   labels: labels || [],
