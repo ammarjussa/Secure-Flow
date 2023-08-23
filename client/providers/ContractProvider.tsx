@@ -13,6 +13,12 @@ interface Props {
 
 interface ContextProps {
   address: string | undefined;
+	moneySpent: any;
+	msLoad: boolean;
+	msErr: any;
+	moneyEarned: any;
+	meLoad: boolean;
+	meErr: any; 
   producerProducts: any;
   ppLoad: boolean;
   ppErr: any;
@@ -35,6 +41,12 @@ interface ContextProps {
 
 const ContractContext = createContext<ContextProps>({
   address: "",
+	moneySpent: 0,
+	msLoad: false,
+	msErr: {},
+	moneyEarned: 0,
+	meLoad: false,
+	meErr: {},
   producerProducts: () => {},
   ppLoad: false,
   ppErr: {},
@@ -63,6 +75,19 @@ export const ContractProvider: React.FC<Props> = ({ children }) => {
     SecureFlowABI
   );
 
+  const {
+    data: moneySpent,
+    isLoading: msLoad,
+    error: msErr,
+  } = useContractRead(contract, "getMoneySpent", [address]);
+
+  const {
+    data: moneyEarned,
+    isLoading: meLoad,
+    error: meErr,
+  } = useContractRead(contract, "getMoneyEarned", [address]);
+
+  // PRODUCER
   const {
     data: producersOrdersDelivered,
     isLoading: podLoad,
@@ -110,6 +135,12 @@ export const ContractProvider: React.FC<Props> = ({ children }) => {
     <ContractContext.Provider
       value={{
         address,
+				moneySpent,
+				msLoad,
+				msErr,
+				moneyEarned,
+				meLoad,
+				meErr,
         producerProducts,
         ppLoad,
         ppErr,

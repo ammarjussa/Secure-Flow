@@ -4,11 +4,6 @@ pragma solidity ^0.8.9;
 // Uncomment this line to use console.log
 import "hardhat/console.sol";
 
-// Resolve the balance issue.
-// Add the order time and the delivery time in the order object everytime an order is created.
-// Add total amount mapping to track total income and spend of participants. Calculate this when order is marked delivered.
-// Order reject function that would give the amount to the buyer back when rejected by seller.
-
 contract SecureFlow {
 
     uint256 balance;
@@ -27,7 +22,7 @@ contract SecureFlow {
     }
 
     uint256 public productCount; 
-    mapping(address => mapping(uint256 => Product)) public products;
+    mapping(address => mapping(uint256 => Product)) products;
 
 
     event ProductAdded(uint256 indexed productId, string name, uint256 quantity, uint256 price);
@@ -47,16 +42,18 @@ contract SecureFlow {
         uint orderTime;
         bool isDelivered;
         uint deliveryTime;
+				bool isRejected;
     }
 
     uint256 public orderCount;
-    mapping(address => mapping(uint256 => Order)) public sellerOrders;
-    mapping(address => mapping(uint256 => Order)) public buyerOrders;
+    mapping(address => mapping(uint256 => Order)) sellerOrders;
+    mapping(address => mapping(uint256 => Order)) buyerOrders;
+		mapping(address => uint256) moneyEarned;
+		mapping(address => uint256) moneySpent;
     
     function addProduct(string memory name, uint256 quantity, uint256 price, ParticipantType partType) external {
         require(quantity > 0, "Quantity must be greater than 0");
         require(partType == ParticipantType.Manufacturer, "Only Manufacturer can add the product");
-
 
         Product storage newProduct = products[msg.sender][productCount];
         newProduct.id = productCount;
@@ -88,7 +85,8 @@ contract SecureFlow {
 				console.log(msg.value, amount);
         require(msg.value >= amount, "Not the correct amount");
 
-        balance = msg.value;
+        balance += msg.value;
+				moneySpent[msg.sender] += msg.value;
 
         Order storage newOrder = sellerOrders[seller][orderCount];
         newOrder.id = orderCount;
@@ -100,6 +98,8 @@ contract SecureFlow {
         newOrder.amount = amount;
         newOrder.isDelivered = false;
         newOrder.buyerType = buyerType;
+				newOrder.orderTime = block.timestamp;
+				newOrder.isRejected = false;
 
         sellerOrders[seller][orderCount] = newOrder;
 				buyerOrders[msg.sender][orderCount] = newOrder;
@@ -112,6 +112,7 @@ contract SecureFlow {
         require(orderId >= 0 && orderId <= orderCount, "Invalid order ID");
         Order storage order = sellerOrders[msg.sender][orderId];
 				
+				require(!order.isRejected, "This order is rejected");
         require(!order.isDelivered, "Order is already delivered");
         require(order.seller == msg.sender, "You are not the seller of this order");
 
@@ -139,14 +140,34 @@ contract SecureFlow {
         newProduct.retailer = product.retailer;
 
         products[buyer][order.productId] = newProduct;
-        payable(order.seller).transfer(balance);
-        balance = 0;
+
+				require(balance >= order.amount, "Money not transferred yet");
+        payable(order.seller).transfer(order.amount);
+				moneyEarned[msg.sender] += order.amount;
+        balance = balance - order.amount;
 
         order.isDelivered = true;
+				order.deliveryTime = block.timestamp;
 				buyerOrders[buyer][orderId] = order;
 
 			emit OrderDelivered(order.id, order.buyer, order.seller, order.quantity, order.amount, order.isDelivered);
     }
+
+		function markOrderRejected(uint256 orderId) external payable {
+      require(orderId >= 0 && orderId <= orderCount, "Invalid order ID");
+      Order storage order = sellerOrders[msg.sender][orderId];
+
+			require(!order.isRejected, "This order is already rejected");
+			require(!order.isDelivered, "Order is already delivered");
+      require(order.seller == msg.sender, "You are not the seller of this order");
+
+			require(balance >= order.amount, "Money not transferred yet");
+			payable(order.buyer).transfer(order.amount);
+			moneySpent[order.buyer] -= order.amount;
+			balance = balance - order.amount;
+
+			order.isRejected = true;
+		}
 
     function getManufacturer(uint256 productId) external view returns (address) {
         require(productId >= 0 && productId <= productCount, "Invalid product ID");
@@ -191,21 +212,19 @@ contract SecureFlow {
                 count++;
             }
         }
-
+				
         return prods;
     }
 
     function getSellerOrdersDataDelivered(address participant) external view returns (Order[] memory) {
         Order[] memory ords = new Order[](orderCount);
-				// uint256 totalAmount;
         for(uint i; i<orderCount; i++) {
             Order storage ord = sellerOrders[participant][i];
 						if(ord.isDelivered == true) {
        	    	ords[i] = ord;
-							// totalAmount+=ord.amount;
 						}
         }
-				// emit throwTotalAmount(totalAmount);
+				
         return ords;
     }
 
@@ -228,4 +247,12 @@ contract SecureFlow {
         }
         return ords;
     }
+
+		function getMoneySpent(address participant) external view returns (uint256) {
+				return moneySpent[participant];
+		}
+
+		function getMoneyEarned(address participant) external view returns (uint256) {
+				return moneyEarned[participant];
+		}
 }

@@ -5,7 +5,6 @@ import { Chart, registerables } from "chart.js";
 import { ProducerModal } from "../modals";
 import { useContractContext } from "../../providers";
 
-const DUMMY_VALUE = 100;
 const DUMMY_CONVERSION = 0.603002;
 
 Chart.register(...registerables);
@@ -18,17 +17,14 @@ interface Props {
 const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
   const {
     address,
+    moneyEarned,
+    meLoad,
     producerProducts,
-    ppLoad,
-    ppErr,
     producerOrders,
-    poLoad,
-    poErr,
     producersOrdersDelivered,
     podLoad,
     podErr,
     addProduct,
-    apLoad,
     markOrderDelivered,
     modLoad,
   } = useContractContext();
@@ -42,7 +38,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
 
   console.log(labels, orderLabels, delOrderLabels);
 
-  if (podLoad) {
+  if (podLoad || modLoad || meLoad) {
     console.log("loading");
   }
   if (podErr) {
@@ -161,11 +157,21 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
         <div className="mb-6">
           <p className="text-xs text-gray-600">Total Money Earned</p>
           <p className="text-md">
-            <span className="text-4xl font-semibold">{DUMMY_VALUE}</span>&nbsp;
-            MATIC
+            <span className="text-4xl font-semibold">
+              {moneyEarned
+                ? parseFloat(ethers.utils.formatEther(moneyEarned))
+                : 0}
+            </span>
+            &nbsp; MATIC
           </p>
           <p className="text-md">
-            ≈ ${(DUMMY_VALUE * DUMMY_CONVERSION).toFixed(2)}
+            ≈ $
+            {moneyEarned
+              ? (
+                  parseFloat(ethers.utils.formatEther(moneyEarned)) *
+                  DUMMY_CONVERSION
+                ).toFixed(2)
+              : 0}
           </p>
         </div>
         <button

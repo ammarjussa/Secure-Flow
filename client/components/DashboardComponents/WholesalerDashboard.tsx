@@ -8,6 +8,7 @@ import { WholesalerModal } from "../modals";
 import { useContractContext, useFirestoreContext } from "../../providers";
 import { SellerInfoModal } from "../modals/SellerInfoModal";
 
+const DUMMY_CONVERSION = 0.603002;
 interface Props {
   user: any;
   userData: any;
@@ -16,8 +17,16 @@ interface Props {
 Chart.register(...registerables);
 
 const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
-  const { address, wholesaleOrders, woLoad, woErr, placeOrder, pOrderLoad } =
-    useContractContext();
+  const {
+    address,
+    wholesaleOrders,
+    woLoad,
+    woErr,
+    placeOrder,
+    pOrderLoad,
+    moneyEarned,
+    moneySpent,
+  } = useContractContext();
   const { allProdAdd, allProdAddData, fetchAddressesByParticipant } =
     useFirestoreContext();
 
@@ -83,8 +92,6 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
 
     handleData();
   }, [wholesaleOrders]);
-
-  // console.log(labels, quantities);
 
   const handleProductData = (products: any) => {
     let productsArr = [];
@@ -156,10 +163,50 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
     responsive: true,
   };
 
+  console.log(moneyEarned);
   return (
     <div className="p-4">
       {userData?.approved ? (
         <div>
+          <div className="flex flex-row justify-start">
+            <div className="mb-6 mr-40">
+              <p className="text-xs text-gray-600">Total Money Spent</p>
+              <p className="text-md">
+                <span className="text-4xl font-semibold">
+                  {moneySpent
+                    ? parseFloat(ethers.utils.formatEther(moneySpent))
+                    : 0}
+                </span>
+                &nbsp; MATIC
+              </p>
+              <p className="text-md">
+                ≈ $
+                {(moneySpent
+                  ? parseFloat(ethers.utils.formatEther(moneySpent)) *
+                    DUMMY_CONVERSION
+                  : 0
+                ).toFixed(2)}
+              </p>
+            </div>
+            <div className="mb-6">
+              <p className="text-xs text-gray-600">Total Money Earned</p>
+              <p className="text-md">
+                <span className="text-4xl font-semibold">
+                  {moneyEarned
+                    ? parseFloat(ethers.utils.formatEther(moneyEarned))
+                    : 0}
+                </span>
+                &nbsp; MATIC
+              </p>
+              <p className="text-md">
+                ≈ $
+                {(moneyEarned
+                  ? parseFloat(ethers.utils.formatEther(moneyEarned))
+                  : 0 * DUMMY_CONVERSION
+                ).toFixed(2)}
+              </p>
+            </div>
+          </div>
           <div className="bg-white border-gray-100 min-w-[45%] min-h-[330px] p-6 rounded-lg mb-20">
             <h2 className="text-2xl font-bold mb-4">Available Products</h2>
             <table className="w-full border-collapse table-auto">
@@ -216,7 +263,7 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
                 <thead>
                   <tr>
                     <th className="px-4 py-2 border">Product</th>
-                    <th className="px-4 py-2 border">Seller Address</th>
+                    <th className="px-4 py-2 border">Seller Name</th>
                     <th className="px-4 py-2 border">Quantity</th>
                     <th className="px-4 py-2 border">Amount</th>
                     <th className="px-4 py-2 border">Delivered</th>
@@ -236,8 +283,14 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
                             {order?.productName}
                           </td>
 
-                          <td className="px-4 py-2 border">
-                            {trimAddress(order?.seller)}
+                          <td
+                            className="px-4 py-2 border cursor-pointer font-bold hover:underline"
+                            onClick={() => {
+                              setSellerInfoModalOpen(true);
+                              setCurrentSeller(allProdAddData[order?.seller]);
+                            }}
+                          >
+                            {allProdAddData[order?.seller].name}
                           </td>
                           <td className="px-4 py-2 border">
                             {parseInt(order?.quantity)}

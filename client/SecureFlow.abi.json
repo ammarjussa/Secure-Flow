@@ -155,80 +155,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "buyerOrders",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "productId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "productName",
-        "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "buyer",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "seller",
-        "type": "address"
-      },
-      {
-        "internalType": "enum SecureFlow.ParticipantType",
-        "name": "buyerType",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "quantity",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "orderTime",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "isDelivered",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "deliveryTime",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "participant",
         "type": "address"
       }
@@ -291,6 +217,11 @@
             "internalType": "uint256",
             "name": "deliveryTime",
             "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRejected",
+            "type": "bool"
           }
         ],
         "internalType": "struct SecureFlow.Order[]",
@@ -334,6 +265,44 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "participant",
+        "type": "address"
+      }
+    ],
+    "name": "getMoneyEarned",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "participant",
+        "type": "address"
+      }
+    ],
+    "name": "getMoneySpent",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -546,6 +515,11 @@
             "internalType": "uint256",
             "name": "deliveryTime",
             "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRejected",
+            "type": "bool"
           }
         ],
         "internalType": "struct SecureFlow.Order[]",
@@ -622,6 +596,11 @@
             "internalType": "uint256",
             "name": "deliveryTime",
             "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRejected",
+            "type": "bool"
           }
         ],
         "internalType": "struct SecureFlow.Order[]",
@@ -660,6 +639,19 @@
       }
     ],
     "name": "markOrderDelivered",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "markOrderRejected",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -712,139 +704,6 @@
       {
         "internalType": "uint256",
         "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "products",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "quantity",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "price",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "manufacturer",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "wholesaler",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "retailer",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "consumer",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "sellerOrders",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "productId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "productName",
-        "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "buyer",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "seller",
-        "type": "address"
-      },
-      {
-        "internalType": "enum SecureFlow.ParticipantType",
-        "name": "buyerType",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "quantity",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "orderTime",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "isDelivered",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "deliveryTime",
         "type": "uint256"
       }
     ],
