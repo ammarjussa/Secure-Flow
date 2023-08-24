@@ -196,9 +196,9 @@ const ParticipantForm: NextPage = () => {
               >
                 <option value="">Select Role</option>
                 <option value="Manufacturer">Manufacturer</option>
-                <option value="Supplier">Supplier</option>
                 <option value="Wholesaler">Wholesaler</option>
                 <option value="Retailer">Retailer</option>
+                <option value="Consumer">Consumer</option>
               </select>
             </div>
             <div>

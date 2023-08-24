@@ -14,7 +14,11 @@ interface ContextProps {
   allProdAdd: any;
   allProdAddData: any;
   allWholeAdd: any;
+  allWholeAddData: any;
   allRetailAdd: any;
+  allRetailAddData: any;
+  allConsumerAdd: any;
+  allConsumerAddData: any;
   fetchAddressesByParticipant: any;
 }
 
@@ -26,7 +30,11 @@ const FirestoreContext = createContext<ContextProps>({
   allProdAdd: [],
   allProdAddData: {},
   allWholeAdd: [],
+  allWholeAddData: {},
   allRetailAdd: [],
+  allRetailAddData: {},
+  allConsumerAdd: [],
+  allConsumerAddData: {},
   fetchAddressesByParticipant: () => {},
 });
 
@@ -36,7 +44,11 @@ export const FirestoreProvider: React.FC<Props> = ({ children }) => {
   const [allProdAdd, setAllProdAdd] = useState();
   const [allProdAddData, setAllProdAddData] = useState();
   const [allWholeAdd, setAllWholeAdd] = useState();
+  const [allWholeAddData, setAllWholeAddData] = useState();
   const [allRetailAdd, setAllRetailAdd] = useState();
+  const [allRetailAddData, setAllRetailAddData] = useState();
+  const [allConsumerAdd, setAllConsumerAdd] = useState();
+  const [allConsumerAddData, setAllConsumerAddData] = useState();
 
   const fetchUserByEmail = async (user: any) => {
     const collectionRef = collection(db, "participants");
@@ -94,22 +106,42 @@ export const FirestoreProvider: React.FC<Props> = ({ children }) => {
         const qry = query(collectionRef, where("role", "==", "Wholesaler"));
         const querySnapshot = await getDocs(qry);
         const addrs: any = [];
+        const addMap: any = {};
+
         if (querySnapshot) {
           querySnapshot.forEach((doc) => {
             addrs.push(doc.data().walletAddress);
+            addMap[doc.data().walletAddress] = doc.data();
           });
         }
         setAllWholeAdd(addrs);
+        setAllWholeAddData(addMap);
       } else if (participant === "Retailer") {
         const qry = query(collectionRef, where("role", "==", "Retailer"));
         const querySnapshot = await getDocs(qry);
         const addrs: any = [];
+        const addMap: any = [];
         if (querySnapshot) {
           querySnapshot.forEach((doc) => {
             addrs.push(doc.data().walletAddress);
+            addMap[doc.data().walletAddress] = doc.data();
           });
         }
         setAllRetailAdd(addrs);
+        setAllRetailAddData(addMap);
+      } else if (participant === "Consumer") {
+        const qry = query(collectionRef, where("role", "==", "Consumer"));
+        const querySnapshot = await getDocs(qry);
+        const addrs: any = [];
+        const addMap: any = [];
+        if (querySnapshot) {
+          querySnapshot.forEach((doc) => {
+            addrs.push(doc.data().walletAddress);
+            addMap[doc.data().walletAddress] = doc.data();
+          });
+        }
+        setAllConsumerAdd(addrs);
+        setAllConsumerAddData(addMap);
       }
     } catch (err) {
       console.log(err);
@@ -126,7 +158,11 @@ export const FirestoreProvider: React.FC<Props> = ({ children }) => {
         allProdAdd,
         allProdAddData,
         allWholeAdd,
+        allWholeAddData,
         allRetailAdd,
+        allRetailAddData,
+        allConsumerAdd,
+        allConsumerAddData,
         fetchAddressesByParticipant,
       }}
     >

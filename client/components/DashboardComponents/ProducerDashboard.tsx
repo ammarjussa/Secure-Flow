@@ -3,7 +3,8 @@ import { ethers } from "ethers";
 import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { ProducerModal } from "../modals";
-import { useContractContext } from "../../providers";
+import { useContractContext, useFirestoreContext } from "../../providers";
+import { SellerInfoModal } from "../modals/SellerInfoModal";
 
 const DUMMY_CONVERSION = 0.603002;
 
@@ -19,15 +20,18 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
     address,
     moneyEarned,
     meLoad,
-    producerProducts,
-    producerOrders,
-    producersOrdersDelivered,
+    sellerProducts,
+    sellerOrders,
+    sellerOrdersDelivered,
     podLoad,
     podErr,
     addProduct,
     markOrderDelivered,
     modLoad,
   } = useContractContext();
+
+  const { allWholeAddData, fetchAddressesByParticipant } =
+    useFirestoreContext();
 
   const [labels, setLabels] = useState<any>([]);
   const [quantities, setQuantities] = useState<any>([]);
@@ -36,7 +40,8 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
   const [delOrderLabels, setDelOrderLabels] = useState<[]>([]);
   const [delOrderQuantities, setDelOrderQuantities] = useState<[]>([]);
 
-  console.log(labels, orderLabels, delOrderLabels);
+  const [currentBuyer, setCurrentBuyer] = useState<any>();
+  const [buyerInfoModalOpen, setBuyerInfoModalOpen] = useState<boolean>(false);
 
   if (podLoad || modLoad || meLoad) {
     console.log("loading");
@@ -45,9 +50,9 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
     console.log("Error");
   }
 
-  const trimAddress = (address: string) => {
-    return address?.slice(0, 5) + "...." + address?.slice(-5);
-  };
+  useEffect(() => {
+    fetchAddressesByParticipant("Wholesaler");
+  });
 
   useEffect(() => {
     const handleData = () => {
@@ -58,20 +63,20 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
       let delOrderLab: any = [];
       let delOrderQuan: any = [];
 
-      if (producerProducts) {
-        for (let product of producerProducts) {
+      if (sellerProducts) {
+        for (let product of sellerProducts) {
           lab.push(product?.name);
           quan.push(parseInt(product?.quantity));
         }
       }
-      if (producerOrders) {
-        for (let order of producerOrders) {
+      if (sellerOrders) {
+        for (let order of sellerOrders) {
           orderLab.push(order?.productName);
           orderQuan.push(parseInt(order?.quantity));
         }
       }
-      if (producersOrdersDelivered) {
-        for (let order of producersOrdersDelivered) {
+      if (sellerOrdersDelivered) {
+        for (let order of sellerOrdersDelivered) {
           delOrderLab.push(order?.productName);
           delOrderQuan.push(parseInt(order?.quantity));
         }
@@ -86,7 +91,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
     };
 
     handleData();
-  }, [producerProducts, producerOrders, producersOrdersDelivered]);
+  }, [sellerProducts, sellerOrders, sellerOrdersDelivered]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [product, setProduct] = useState({
@@ -197,7 +202,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {producerProducts?.map((product: any) => (
+                  {sellerProducts?.map((product: any) => (
                     <tr key={parseInt(product?.id)}>
                       <td className="px-4 py-2 border">
                         {parseInt(product?.id)}
@@ -238,15 +243,15 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                 <thead>
                   <tr>
                     <th className="px-4 py-2 border">Id</th>
-                    <th className="px-4 py-2 border">Buyer Address</th>
+                    <th className="px-4 py-2 border">Buyer Name</th>
                     <th className="px-4 py-2 border">Quantity</th>
                     <th className="px-4 py-2 border">Amount</th>
                     <th className="px-4 py-2 border">Delivered</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {producerOrders &&
-                    producerOrders
+                  {sellerOrders &&
+                    sellerOrders
                       .filter(
                         (order: any) =>
                           order?.buyer !==
@@ -259,7 +264,7 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                           </td>
 
                           <td className="px-4 py-2 border">
-                            {trimAddress(order?.buyer)}
+                            {allWholeAddData[order?.buyer]?.name}
                           </td>
                           <td className="px-4 py-2 border">
                             {parseInt(order?.quantity)}
@@ -305,15 +310,15 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                 <thead>
                   <tr>
                     <th className="px-4 py-2 border">Id</th>
-                    <th className="px-4 py-2 border">Buyer Address</th>
+                    <th className="px-4 py-2 border">Buyer Name</th>
                     <th className="px-4 py-2 border">Quantity</th>
                     <th className="px-4 py-2 border">Amount</th>
                     <th className="px-4 py-2 border">Delivered</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {producersOrdersDelivered &&
-                    producersOrdersDelivered
+                  {sellerOrdersDelivered &&
+                    sellerOrdersDelivered
                       .filter(
                         (order: any) =>
                           order?.buyer !==
@@ -325,8 +330,14 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
                             {parseInt(order?.id)}
                           </td>
 
-                          <td className="px-4 py-2 border">
-                            {trimAddress(order?.buyer)}
+                          <td
+                            className="px-4 py-2 border cursor-pointer font-bold hover:underline"
+                            onClick={() => {
+                              setBuyerInfoModalOpen(true);
+                              setCurrentBuyer(allWholeAddData[order?.buyer]);
+                            }}
+                          >
+                            {allWholeAddData[order?.buyer]?.name}
                           </td>
                           <td className="px-4 py-2 border">
                             {parseInt(order?.quantity)}
@@ -366,6 +377,11 @@ const ProducerDashboard: React.FC<Props> = ({ user, userData }) => {
             product={product}
             handleChange={handleChange}
             addProd={addProd}
+          />
+          <SellerInfoModal
+            isModalOpen={buyerInfoModalOpen}
+            setIsModalOpen={setBuyerInfoModalOpen}
+            sellerInfo={currentBuyer}
           />
         </div>
       ) : (

@@ -13,26 +13,26 @@ interface Props {
 
 interface ContextProps {
   address: string | undefined;
-	moneySpent: any;
-	msLoad: boolean;
-	msErr: any;
-	moneyEarned: any;
-	meLoad: boolean;
-	meErr: any; 
-  producerProducts: any;
+  moneySpent: any;
+  msLoad: boolean;
+  msErr: any;
+  moneyEarned: any;
+  meLoad: boolean;
+  meErr: any;
+  sellerProducts: any;
   ppLoad: boolean;
   ppErr: any;
-  producerOrders: any;
+  sellerOrders: any;
   poLoad: boolean;
   poErr: any;
-  producersOrdersDelivered: any;
+  sellerOrdersDelivered: any;
   podLoad: boolean;
   podErr: any;
   addProduct: any;
   apLoad: boolean;
   markOrderDelivered: any;
   modLoad: boolean;
-  wholesaleOrders: any;
+  buyerOrders: any;
   woLoad: boolean;
   woErr: any;
   placeOrder: any;
@@ -41,26 +41,26 @@ interface ContextProps {
 
 const ContractContext = createContext<ContextProps>({
   address: "",
-	moneySpent: 0,
-	msLoad: false,
-	msErr: {},
-	moneyEarned: 0,
-	meLoad: false,
-	meErr: {},
-  producerProducts: () => {},
+  moneySpent: 0,
+  msLoad: false,
+  msErr: {},
+  moneyEarned: 0,
+  meLoad: false,
+  meErr: {},
+  sellerProducts: () => {},
   ppLoad: false,
   ppErr: {},
-  producerOrders: () => {},
+  sellerOrders: () => {},
   poLoad: false,
   poErr: {},
-  producersOrdersDelivered: () => {},
+  sellerOrdersDelivered: () => {},
   podLoad: false,
   podErr: {},
   addProduct: () => {},
   apLoad: false,
   markOrderDelivered: () => {},
   modLoad: false,
-  wholesaleOrders: () => {},
+  buyerOrders: () => {},
   woLoad: false,
   woErr: {},
   placeOrder: () => {},
@@ -89,19 +89,19 @@ export const ContractProvider: React.FC<Props> = ({ children }) => {
 
   // PRODUCER
   const {
-    data: producersOrdersDelivered,
+    data: sellerOrdersDelivered,
     isLoading: podLoad,
     error: podErr,
   } = useContractRead(contract, "getSellerOrdersDataDelivered", [address]);
 
   const {
-    data: producerOrders,
+    data: sellerOrders,
     isLoading: poLoad,
     error: poErr,
   } = useContractRead(contract, "getSellerOrdersData", [address]);
 
   const {
-    data: producerProducts,
+    data: sellerProducts,
     isLoading: ppLoad,
     error: ppErr,
   } = useContractRead(contract, "getProductsData", [address]);
@@ -117,7 +117,7 @@ export const ContractProvider: React.FC<Props> = ({ children }) => {
   // WHOLESALERS CONTRACT
 
   const {
-    data: wholesaleOrders,
+    data: buyerOrders,
     isLoading: woLoad,
     error: woErr,
   } = useContractRead(contract, "getBuyerOrdersData", [address]);
@@ -135,26 +135,26 @@ export const ContractProvider: React.FC<Props> = ({ children }) => {
     <ContractContext.Provider
       value={{
         address,
-				moneySpent,
-				msLoad,
-				msErr,
-				moneyEarned,
-				meLoad,
-				meErr,
-        producerProducts,
+        moneySpent,
+        msLoad,
+        msErr,
+        moneyEarned,
+        meLoad,
+        meErr,
+        sellerProducts,
         ppLoad,
         ppErr,
-        producerOrders,
+        sellerOrders,
         poLoad,
         poErr,
-        producersOrdersDelivered,
+        sellerOrdersDelivered,
         podLoad,
         podErr,
         addProduct,
         apLoad,
         markOrderDelivered,
         modLoad,
-        wholesaleOrders,
+        buyerOrders,
         woLoad,
         woErr,
         placeOrder,
