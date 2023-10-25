@@ -34,12 +34,8 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
     podLoad,
     podErr,
   } = useContractContext();
-  const {
-    allProdAdd,
-    allProdAddData,
-    fetchAddressesByParticipant,
-    allRetailAddData,
-  } = useFirestoreContext();
+  const { allRetailAdd, allRetailAddData, fetchAddressesByParticipant } =
+    useFirestoreContext();
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [sellerInfoModalOpen, setSellerInfoModalOpen] =
@@ -57,10 +53,6 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
   const [quantities, setQuantities] = useState<[]>();
   const [productLabels, setProductLabels] = useState<[]>();
   const [productQuantities, setProductQuantities] = useState<[]>();
-  const [orderLabels, setOrderLabels] = useState<[]>([]);
-  const [orderQuantities, setOrderQuantities] = useState<[]>([]);
-  const [delOrderLabels, setDelOrderLabels] = useState<[]>([]);
-  const [delOrderQuantities, setDelOrderQuantities] = useState<[]>([]);
 
   useEffect(() => {
     fetchAddressesByParticipant("Manufacturer");
@@ -77,7 +69,7 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
     data: products,
     isLoading: productLoad,
     error: productErr,
-  } = useContractRead(contract, "getProductsDataParticipants", [allProdAdd]);
+  } = useContractRead(contract, "getProductsDataParticipants", [allRetailAdd]);
 
   if (productLoad || woLoad || pOrderLoad || poLoad || podLoad) {
     console.log("loading");
@@ -92,10 +84,6 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
       let quan: any = [];
       let productLab: any = [];
       let productQuan: any = [];
-      let orderLab: any = [];
-      let orderQuan: any = [];
-      let delOrderLab: any = [];
-      let delOrderQuan: any = [];
 
       if (buyerOrders) {
         for (let order of buyerOrders) {
@@ -113,27 +101,10 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
         }
       }
 
-      if (sellerOrders) {
-        for (let order of sellerOrders) {
-          orderLab.push(order?.productName);
-          orderQuan.push(parseInt(order?.quantity));
-        }
-      }
-      if (sellerOrdersDelivered) {
-        for (let order of sellerOrdersDelivered) {
-          delOrderLab.push(order?.productName);
-          delOrderQuan.push(parseInt(order?.quantity));
-        }
-      }
-
       setLabels(lab);
       setQuantities(quan);
       setProductLabels(productLab);
       setProductQuantities(productQuan);
-      setOrderLabels(orderLab);
-      setOrderQuantities(orderQuan);
-      setDelOrderLabels(delOrderLab);
-      setDelOrderQuantities(delOrderQuan);
     };
 
     handleData();
@@ -148,7 +119,7 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
       let newProd: any = {};
       newProd = prod;
       newProd = { ...newProd, sellerName: "" };
-      for (const [key, value] of Object.entries(allProdAddData)) {
+      for (const [key, value] of Object.entries(allRetailAddData)) {
         if (newProd.manufacturer === key) {
           newProd.sellerName = (value as any)?.name;
         }
@@ -275,7 +246,7 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
                         onClick={() => {
                           setSellerInfoModalOpen(true);
                           setCurrentSeller(
-                            allProdAddData[product?.manufacturer]
+                            allRetailAddData[product?.manufacturer]
                           );
                         }}
                       >
@@ -337,11 +308,11 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
                             className="px-4 py-2 border cursor-pointer font-bold hover:underline"
                             onClick={() => {
                               setSellerInfoModalOpen(true);
-                              setCurrentSeller(allProdAddData[order?.seller]);
+                              setCurrentSeller(allRetailAddData[order?.seller]);
                             }}
                           >
-                            {allProdAddData &&
-                              allProdAddData[order?.seller]?.name}
+                            {allRetailAddData &&
+                              allRetailAddData[order?.seller]?.name}
                           </td>
                           <td className="px-4 py-2 border">
                             {parseInt(order?.quantity)}
@@ -427,144 +398,7 @@ const WholesalerDashboard: React.FC<Props> = ({ userData }) => {
               />
             </div>
           </div>
-          <div className="flex flex-row items-start justify-between px-2 mb-20">
-            <div className="bg-white border-gray-100 w-[48%] min-h-[330px] p-6 rounded-lg mr-18">
-              <h2 className="text-2xl font-bold mb-4">My Pending Orders</h2>
-              <table className="w-full border-collapse table-auto">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-2 border">Id</th>
-                    <th className="px-4 py-2 border">Buyer Name</th>
-                    <th className="px-4 py-2 border">Quantity</th>
-                    <th className="px-4 py-2 border">Amount</th>
-                    <th className="px-4 py-2 border">Delivered</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sellerOrders &&
-                    sellerOrders
-                      .filter(
-                        (order: any) =>
-                          order?.buyer !==
-                          "0x0000000000000000000000000000000000000000"
-                      )
-                      ?.map((order: any) => (
-                        <tr key={parseInt(order?.id)}>
-                          <td className="px-4 py-2 border">
-                            {parseInt(order?.id)}
-                          </td>
 
-                          <td className="px-4 py-2 border">
-                            {allRetailAddData[order?.buyer]?.name}
-                            order?.buyer
-                          </td>
-                          <td className="px-4 py-2 border">
-                            {parseInt(order?.quantity)}
-                          </td>
-                          <td className="px-4 py-2 border">
-                            {parseFloat(
-                              ethers.utils.formatEther(order?.amount)
-                            )}
-                          </td>
-                          <td className="px-4 py-2 border">
-                            <button
-                              // onClick={(e) => markDelivered(e, order)}
-                              className="px-2 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300"
-                            >
-                              Delivered
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="h-80 bg-white border-gray-100 w-[48%] min-h-[330px] p-6 rounded-lg">
-              <Bar
-                data={{
-                  labels: orderLabels || [],
-                  datasets: [
-                    {
-                      label: "Amount",
-                      data: orderQuantities,
-                      backgroundColor: "rgba(45, 54, 132, 0.7)",
-                    },
-                  ],
-                }}
-                options={chartOptions}
-              />
-            </div>
-          </div>
-          <div className="flex flex-row items-start justify-between px-2 mb-20">
-            <div className="bg-white border-gray-100 w-[48%] min-h-[330px] p-6 rounded-lg mr-18">
-              <h2 className="text-2xl font-bold mb-4">My Delivered Orders</h2>
-              <table className="w-full border-collapse table-auto">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-2 border">Id</th>
-                    <th className="px-4 py-2 border">Buyer Name</th>
-                    <th className="px-4 py-2 border">Quantity</th>
-                    <th className="px-4 py-2 border">Amount</th>
-                    <th className="px-4 py-2 border">Delivered</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sellerOrdersDelivered &&
-                    sellerOrdersDelivered
-                      .filter(
-                        (order: any) =>
-                          order?.buyer !==
-                          "0x0000000000000000000000000000000000000000"
-                      )
-                      ?.map((order: any) => (
-                        <tr key={parseInt(order?.id)}>
-                          <td className="px-4 py-2 border">
-                            {parseInt(order?.id)}
-                          </td>
-
-                          <td
-                            className="px-4 py-2 border cursor-pointer font-bold hover:underline"
-                            // onClick={() => {
-                            //   setBuyerInfoModalOpen(true);
-                            //   setCurrentBuyer(allWholeAddData[order?.buyer]);
-                            // }}
-                          >
-                            {allRetailAddData &&
-                              allRetailAddData[order?.buyer]?.name}
-                            {order?.buyer}
-                          </td>
-                          <td className="px-4 py-2 border">
-                            {parseInt(order?.quantity)}
-                          </td>
-                          <td className="px-4 py-2 border">
-                            {parseFloat(
-                              ethers.utils.formatEther(order?.amount)
-                            )}
-                          </td>
-                          <td className="px-4 py-2 border">
-                            {order?.isDelivered ? "True" : "False"}
-                          </td>
-                        </tr>
-                      ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="h-80 bg-white border-gray-100 min-w-[48%] min-h-[330px] p-6 rounded-lg">
-              <Bar
-                data={{
-                  labels: delOrderLabels || [],
-                  datasets: [
-                    {
-                      label: "Amount",
-                      data: delOrderQuantities,
-                      backgroundColor: "rgba(34, 233, 100, 0.9)",
-                    },
-                  ],
-                }}
-                options={chartOptions}
-              />
-            </div>
-          </div>
           <WholesalerModal
             isModalOpen={isModalOpen}
             setIsModalOpen={setIsModalOpen}

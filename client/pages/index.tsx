@@ -1,26 +1,19 @@
 import { NextPage } from "next";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuthContext } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { getAuth, signOut } from "firebase/auth";
-import { db } from "../firebase/firebase";
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  doc,
-  setDoc,
-} from "firebase/firestore";
 import AdminDashboard from "../components/DashboardComponents/AdminDashboard";
 import ProducerDashboard from "../components/DashboardComponents/ProducerDashboard";
 import RetailerDashboard from "../components/DashboardComponents/RetailerDashboard";
 import Header from "../components/Header";
 import WholesalerDashboard from "../components/DashboardComponents/WholesalerDashboard";
+import Sidebar from "../components/Sidebar";
+import { useFirestoreContext } from "../providers";
 
 const DashboardPage: NextPage = () => {
   const { user }: any = useAuthContext();
-  const [role, setRole] = useState(null);
+  const { userData, fetchUserByEmail } = useFirestoreContext();
 
   const router = useRouter();
   const auth = getAuth();
@@ -30,13 +23,7 @@ const DashboardPage: NextPage = () => {
   }, [user]);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const collectionRef = collection(db, "participants");
-      const qry = query(collectionRef, where("email", "==", user?.email));
-      const docSnap = await getDocs(qry);
-      setRole(docSnap.docs[0].data().role);
-    };
-    fetchUser();
+    fetchUserByEmail(user);
   }, []);
 
   const handleLogOut = async (e: any) => {
@@ -50,14 +37,18 @@ const DashboardPage: NextPage = () => {
   };
 
   return (
-    <div>
+    <div className="max-h-screen overflow-hidden">
       <Header page="dashboard" />
-      <div className="flex flex-col">
+      <div className="flex">
+        <Sidebar user={userData} />
         <main className="flex-grow p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold mb-4">
-              Welcome to the SecureFlow Dashboard
-            </h2>
+            <div className="flex flex-col items-center">
+              <h1 className="text-4xl font-semibold">Dashboard</h1>
+              <p className="text-gray-500 mt-2">
+                Welcome back, {userData?.name}!
+              </p>
+            </div>
 
             <button
               onClick={handleLogOut}
@@ -66,15 +57,17 @@ const DashboardPage: NextPage = () => {
               Sign Out
             </button>
           </div>
-          {role === "Admin" ? (
-            <AdminDashboard />
-          ) : role === "Wholesaler" ? (
-            <WholesalerDashboard user={user} />
-          ) : role === "Manufacturer" ? (
-            <ProducerDashboard user={user} />
-          ) : role === "Retailer" ? (
-            <RetailerDashboard user={user} />
-          ) : null}
+          <div className="mt-6 h-[calc(100vh-200px)] overflow-auto">
+            {userData?.role === "Admin" ? (
+              <AdminDashboard />
+            ) : userData?.role === "Wholesaler" ? (
+              <WholesalerDashboard user={user} userData={userData} />
+            ) : userData?.role === "Manufacturer" ? (
+              <ProducerDashboard user={user} userData={userData} />
+            ) : userData?.role === "Retailer" ? (
+              <RetailerDashboard user={user} userData={userData} />
+            ) : null}
+          </div>
         </main>
       </div>
     </div>

@@ -22,7 +22,8 @@ const LoginPage: NextPage = () => {
       if (result) {
         router.push("/");
       }
-    } catch (err) {
+    } catch (err: any) {
+      alert(err?.message);
       console.log(err);
     }
   };
@@ -30,7 +31,7 @@ const LoginPage: NextPage = () => {
   return (
     <div>
       <Header />
-      <div className="flex items-center justify-between min-h-[calc(100vh-110px)] bg-white">
+      <div className="flex items-center justify-between min-h-[calc(100vh-110px)]">
         <div className="flex flex-col justify-center md:flex-row w-full max-w-md md:max-w-5xl">
           <div className="md:w-1/2">
             <div className="w-full max-w-md">
@@ -41,7 +42,7 @@ const LoginPage: NextPage = () => {
               <form className="px-8 pt-6 pb-8 mb-4 flex flex-col items-center">
                 <div className="mb-4">
                   <input
-                    className="shadow appearance-none bg-gray-100 border rounded-lg w-full py-2 px-3 pr-10 text-gray-800  focus:outline-none focus:shadow-outline"
+                    className="shadow appearance-none bg-white border rounded-lg w-full py-2 px-3 pr-10 text-gray-800  focus:outline-none focus:shadow-outline"
                     id="email"
                     type="email"
                     placeholder="Email address"
@@ -50,7 +51,7 @@ const LoginPage: NextPage = () => {
                 </div>
                 <div className="mb-4">
                   <input
-                    className="shadow appearance-none border bg-gray-100 rounded-lg w-full py-2 px-3 pr-10 text-gray-800 focus:outline-none focus:shadow-outline"
+                    className="shadow appearance-none border bg-white rounded-lg w-full py-2 px-3 pr-10 text-gray-800 focus:outline-none focus:shadow-outline"
                     id="password"
                     type="password"
                     placeholder="Password"

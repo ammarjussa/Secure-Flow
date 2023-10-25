@@ -1,37 +1,13 @@
 import React, { useState, useEffect } from "react";
-import Modal from "react-modal";
 import { db } from "../../firebase/firebase";
-import {
-  collection,
-  getDocs,
-  doc,
-  setDoc,
-  where,
-  query,
-} from "firebase/firestore";
-import {
-  Web3Button,
-  useContract,
-  useContractRead,
-  useAddress,
-} from "@thirdweb-dev/react";
-
+import { doc, setDoc } from "firebase/firestore";
+import { useContract, useContractRead, useAddress } from "@thirdweb-dev/react";
 import SecureFlowABI from "../../SecureFlow.abi.json";
-
-const modalStyles = {
-  content: {
-    top: "50%",
-    left: "50%",
-    right: "auto",
-    bottom: "auto",
-    marginRight: "-50%",
-    transform: "translate(-50%, -50%)",
-    maxWidth: "400px",
-  },
-};
+import { AdminModal } from "../modals";
+import { useFirestoreContext } from "../../providers";
 
 const AdminDashboard: React.FC = () => {
-  const [participantData, setParticipantData] = useState<any>();
+  const { participantData, fetchDataByApproval } = useFirestoreContext();
 
   const { contract } = useContract(
     process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
@@ -58,27 +34,7 @@ const AdminDashboard: React.FC = () => {
   }
 
   useEffect(() => {
-    const fetchData = async () => {
-      const dataArr: any[] = [];
-      const collectionRef = collection(db, "participants");
-      const qry = query(
-        collectionRef,
-        where("role", "!=", "Admin"),
-        where("approved", "==", false)
-      );
-      const querySnapshot = await getDocs(qry);
-      if (querySnapshot) {
-        querySnapshot.forEach((doc) => {
-          let obj = {
-            id: doc.id,
-            data: doc.data(),
-          };
-          dataArr.push(obj);
-        });
-        setParticipantData(dataArr);
-      }
-    };
-    fetchData();
+    fetchDataByApproval();
   }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -130,46 +86,12 @@ const AdminDashboard: React.FC = () => {
         ))}
       </ul>
 
-      {/* <Web3Button
-        contractAddress={process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string}
-        action={(contract) => contract.call("addContract")}
-        onSuccess={() => {
-          console.log();
-        }}
-      ></Web3Button> */}
-
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={() => setIsModalOpen(false)}
-        style={modalStyles}
-        contentLabel="Participant Details"
-      >
-        <h2 className="text-2xl font-bold mb-4 text-center">
-          Participant Details
-        </h2>
-        {selectedParticipant && (
-          <div>
-            <p>Name: {selectedParticipant.data.name}</p>
-            <p>Email: {selectedParticipant.data.email}</p>
-            <p>Organization: {selectedParticipant.data.organization}</p>
-            <p>Phone Number: {selectedParticipant.data.phoneNumber}</p>
-          </div>
-        )}
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={() => handleApproveParticipant(selectedParticipant.id)}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition-colors duration-300"
-          >
-            Approve
-          </button>
-          <button
-            onClick={() => setIsModalOpen(false)}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition-colors duration-300"
-          >
-            Close
-          </button>
-        </div>
-      </Modal>
+      <AdminModal
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+        selectedParticipant={selectedParticipant}
+        handleApproveParticipant={handleApproveParticipant}
+      />
     </div>
   );
 };
