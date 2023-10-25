@@ -1,37 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../firebase/firebase";
 import { doc, setDoc } from "firebase/firestore";
-import { useContract, useContractRead, useAddress } from "@thirdweb-dev/react";
-import SecureFlowABI from "../../SecureFlow.abi.json";
 import { AdminModal } from "../modals";
 import { useFirestoreContext } from "../../providers";
 
 const AdminDashboard: React.FC = () => {
   const { participantData, fetchDataByApproval } = useFirestoreContext();
-
-  const { contract } = useContract(
-    process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
-    SecureFlowABI
-  );
-  const address = useAddress();
-
-  // if (!address) {
-  //   console.log("Wallet not connected");
-  // } else {
-  //   console.log(address);
-  // }
-
-  const { data, isLoading, error } = useContractRead(
-    contract,
-    "getAddress",
-    [],
-    {
-      from: address,
-    }
-  );
-  if (!isLoading) {
-    console.log(data);
-  }
 
   useEffect(() => {
     fetchDataByApproval();
